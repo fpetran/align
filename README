@@ -1,0 +1,7 @@
+Required for align:
+
+ICU library
+CMake
+
+Recommended
+Doxygen

@@ -1,0 +1,21 @@
+#ifndef ALIGN_ALIGN_CONFIG_HH
+#define ALIGN_ALIGN_CONFIG_HH
+
+/*
+ * the stuff in here is more evil than mordor
+ * but it's easier to use macros for the stuff
+ * that gets set by cmake
+ *
+ */
+
+#define ALIGN_VERSION_MAJOR @align_VERSION_MAJOR@
+#define ALIGN_VERSION_MINOR @align_VERSION_MINOR@
+#define ALIGN_VERSION "@align_VERSION_MAJOR@.@align_VERSION_MINOR@"
+
+#define ALIGN_DICT_BASE "@align_DICT_BASE@"
+#define ALIGN_FILE_BASE "@align_FILE_BASE@"
+
+#define ALIGN_TEST_E "@align_FILE_BASE@/@align_TEST_E@"
+#define ALIGN_TEST_F "@align_FILE_BASE@/@align_TEST_F@"
+
+#endif
