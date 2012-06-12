@@ -1,2 +1,3 @@
 21-65.dictionary:### 21_(Ba).txt = 65_(M21).txt
 65-21.dictionary:### 65_(M21).txt = 21_(Ba).txt
+test.dictionary:### test_e.txt = test_f.txt

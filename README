@@ -3,5 +3,6 @@ Required for align:
 ICU library
 CMake
 
-Recommended
-Doxygen
+Recommended:
+Doxygen - for documentation
+gtest - for the unit tests

@@ -1,17 +1,20 @@
 // Copyright 2012 Florian Petran
 #include<iostream>
 #include<fstream>
-#include<vector>
+#include<list>
+#include<string>
 
 #include<gtest/gtest.h>
 
 #include"align.h"
+#include"params.h"
 #include"string_impl.h"
 
 // fixture for all texts
-class AlignTest_Fixture : public testing::Test {
+class WordTest_Fixture : public testing::Test {
     protected:
         virtual void SetUp() {
+            Params::get().set_dict_base( ALIGN_DICT_BASE );
             _dict.open(ALIGN_TEST_E, ALIGN_TEST_F);
             _f = _dict.get_f();
             _e = _dict.get_e();
@@ -26,7 +29,31 @@ class AlignTest_Fixture : public testing::Test {
         Text *_e, *_f;
 };
 
-class WordTest : public AlignTest_Fixture {
+class AlignTest_Fixture : public testing::Test {
+    protected:
+        virtual void SetUp() {
+            Params::get().set_dict_base( ALIGN_DICT_BASE );
+            std::string e =
+                static_cast<std::string>(ALIGN_FILE_BASE);
+            std::string f = e;
+
+            e += "/test_e.txt";
+            f += "/test_f.txt";
+
+            _dict.open( e.c_str(), f.c_str() );
+            //_f = _dict.get_f();
+            //_e = _dict.get_e();
+        }
+        virtual void TearDown() {
+        }
+
+        Dictionary _dict;
+};
+
+class WordTest : public WordTest_Fixture {
+};
+
+class AlignTest : public AlignTest_Fixture {
 };
 
 TEST_F(WordTest, Comparison) {
@@ -75,6 +102,7 @@ TEST_F(WordTest, TextPtrF) {
         EXPECT_TRUE( (*_f)[i-1].get_text() == (*_f)[i].get_text() );
 }
 
+
 namespace {
     void printWord(const Word& w) {
         printString(w.get_str());
@@ -87,11 +115,30 @@ TEST_F(WordTest, LookupTest) {
     // pegraben - 21(e) : 5459 5571
     // begraben - 65(f) : 8479 8559
 
-    std::vector<int> translations = _dict.lookup((*_e)[5458]);
-    EXPECT_EQ(translations.size(), 2);
+    TranslationsEntry* translations = _dict.lookup((*_e)[5458]);
+    EXPECT_EQ(translations->size(), 2);
 
-    EXPECT_EQ(translations[0], 8478);
-    EXPECT_EQ(translations[1], 8558);
+    TranslationsEntry::iterator tr = translations->begin();
+    EXPECT_EQ(*tr, 8478);
+    ++tr;
+    EXPECT_EQ(*tr, 8558);
+}
+
+TEST_F(AlignTest, CandidatesTest) {
+    Candidates c(_dict);
+    c.collect();
+
+    for( Translations::const_iterator t = c.begin(); t != c.end(); ++t ) {
+        std::cout << t->second->size() << " candidates" << std::endl;
+        std::cout << t->first << " - ";
+        for( TranslationsEntry::const_iterator te = t->second->begin();
+                te != t->second->end(); ++te )
+            std::cout << *te << " ";
+        std::cout << std::endl;
+    }
+
+    SequenceContainer sc(c);
+    sc.make();
 }
 
 int main(int argc, char** argv) {

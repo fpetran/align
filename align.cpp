@@ -1,87 +1,37 @@
 // Copyright 2012 Florian Petran
-#include"align.h"
 #include<map>
-#include<vector>
+#include<iostream>
 
-PairFactory::PairFactory(const Dictionary& dict) {
-    _dict = &dict;
-}
-
-Pair PairFactory::make_pair(int ei, int fi) {
-    return Pair(_dict->get_e()->at(ei), ei, _dict->get_f()->at(fi), fi);
-}
-
-Pair::Pair(const Word& s, int s_pos, const Word& t, int t_pos) {
-    _source = s;
-    _ei = s_pos;
-    _target = t;
-    _fi = t_pos;
-}
-
-int Pair::slot() {
-    return _ei;
-}
-
-bool Pair::is_close_to(const Pair& that) {
-    return
-            abs(this->_ei - that._ei) <= 2  // XXX magic number = evil
-        &&  this->_ei != that._ei;
-}
-
-Sequence::Sequence(const Dictionary& dict, const Pair& p) {
-    _dict = &dict;
-    this->add(p);
-}
-
-Sequence::Sequence(const Dictionary& dict, const Pair& p1, const Pair& p2) {
-    _dict = &dict;
-    this->add(p1);
-    this->add(p2);
-}
-
-void Sequence::add(const Pair& p) {
-    _list.push_back(p);
-}
-
-int Sequence::slot() {
-    return _list.front().slot();
-}
+#include"align.h"
+#include"params.h"
+#include"containers.h"
 
 Candidates::Candidates(const Dictionary& dict) {
     _dict = &dict;
     pair_factory = new PairFactory(dict);
 
-    collect_candidates();
-    initial_sequences();
-
-    // construct initial sequences with one pair each
-    /*
-    Text *e = dict.get_e(), *f = dict.get_f();
-    std::vector<int> t;
-    for( int i = 0; i < e->length(); ++i ) {
-        Word w = e->at(i);
-        try {
-            t = dict.lookup( w );
-            for( unsigned int j = 0; j < t.size(); ++j )
-                _list.push_back( Sequence( dict, Pair( w, i, f->at(t[j]), t[j] ) ) );
-        }
-        catch( std::out_of_range ) {
-            ;
-        }
-    }
-    */
-
-    // expand sequences
-    // merge sequences
-    // do reverse alignments
-    // assign score
+    // this sucks. candidates constructor shouldn't do
+    // the alignment work. but for now, i'll leave it
+    // until i've found a better place for it.
+    // TODO XXX FIXME
+    //
+    // in principle, candidates ctor should collect candidates
+    // sequences init, expanding and merging should then be
+    // done in a separate sequence container object
+    //collect_candidates();
+    //initial_sequences();
+    //expand_sequences();
+    // repeat same process in reverse
+    //merge_sequences();
+    // collect scores
+    // remove all but topranking
 }
 
 Candidates::~Candidates() {
     delete pair_factory;
 }
 
-void Candidates::collect_candidates() {
+void Candidates::collect() {
     for ( int i = 0; i < _dict->get_e()->length(); ++i ) {
         Word w = _dict->get_e()->at(i);
 
@@ -92,55 +42,166 @@ void Candidates::collect_candidates() {
     }
 }
 
-void Candidates::initial_sequences() {
+Translations::const_iterator Candidates::begin() const
+    { return _translations.begin(); }
+Translations::const_iterator Candidates::end() const
+    { return _translations.end(); }
+
+SequenceContainer::SequenceContainer(const Candidates& c) {
+    this->pair_factory = c.pair_factory;
+    this->_dict = c._dict;
+    this->_translations = c._translations;
+}
+
+void SequenceContainer::make() {
+    initial_sequences();
+    expand_sequences();
+    merge_sequences();
+}
+
+void SequenceContainer::initial_sequences() {
     Text *e = _dict->get_e();
 
-    std::map<int, std::vector<int> >::iterator
+    Translations::iterator
         me = _translations.begin(), you = me;
     ++you;
 
     while (me != _translations.end() && you != _translations.end()) {
         // skip words with no candidate
-        // XXX introduce max skip here
-        while (!_dict->has(e->at(you->first)))
+        unsigned int skipped = 0;
+        while (!_dict->has(e->at(you->first))) {
             ++you;
-
-        for (std::vector<int>::iterator t1 = me->second.begin();
-                t1 != me->second.end(); ++t1) {
-            Pair p1 = pair_factory->make_pair(me->first, *t1);
-            for (std::vector<int>::iterator t2 = you->second.begin();
-                    t2 != you->second.end(); ++t2) {
-                Pair p2 = pair_factory->make_pair(you->first, *t2);
-                if (p1.is_close_to(p2))
-                    _list.push_back(Sequence(*_dict, p1, p2));
-            }
+            ++skipped;
         }
+
+        if (skipped <= Params::get().max_skip())
+            for (TranslationsEntry::iterator t1 = me->second->begin();
+                    t1 != me->second->end(); ++t1) {
+                Pair p1 = pair_factory->make_pair(me->first, *t1);
+                for (TranslationsEntry::iterator t2 = you->second->begin();
+                        t2 != you->second->end(); ++t2) {
+                    Pair p2 = pair_factory->make_pair(you->first, *t2);
+                    if (p1.is_close_to(p2))
+                        _list.push_back(Sequence(*_dict, p1, p2));
+                }
+            }
         ++me;
         ++you;
     }
 }
 
-void Candidates::expand_sequences() {
-    int pairs_added = 0;
+void SequenceContainer::expand_sequences() {
+    unsigned int pairs_added;
+    std::list<Sequence>::iterator current = _list.begin();
+
+    do {
+        pairs_added = 0;
+        // look at the next slot from the end of the sequence
+        unsigned int next_slot = current->back_slot() + 1;
+
+        // unless that has no candidate
+        // or it exceeds max_cand_diff TODO
+        while (next_slot < _translations.size()
+                && _translations[next_slot]->size() == 0)
+            ++next_slot;
+
+        if (next_slot < _translations.size()
+          && next_slot - current->back_slot() <= Params::get().closeness()) {
+            // go through all translations for next_candidate
+            TranslationsEntry::iterator it =
+                _translations[next_slot]->begin();
+
+            while (it != _translations[next_slot]->end()) {
+                Pair p = pair_factory->make_pair( next_slot, *it );
+
+                if (current->last_pair().is_close_to(p)) {
+                    // TODO if pairs_added >= 1
+                    // make a copy of original sequence
+                    // add pair to sequence
+                    current->add(p);
+                    ++pairs_added;
+                    it = _translations[next_slot]->erase( it );
+                }
+                else
+                    ++it;
+            }
+        }
+
+        ++current;
+        if (current == _list.end())
+            current = _list.begin();
+    } while (pairs_added != 0);
+
+
+    // at this point, we can clear the translation candidates
+    // also, the TranslationsEntry ptr must be deleted here, otherwise,
+    // leakage will occur
+
+    for (Translations::iterator tr = _translations.begin();
+            tr != _translations.end(); ++tr ) {
+        delete tr->second;
+    }
+    _translations.clear();
+}
+
+void SequenceContainer::merge_sequences() {
+    unsigned int combined = 0;
     std::list<Sequence>::iterator current = _list.begin();
 
     while (true) {
-        int next_candidate = current->slot();
+        combined = 0;
+        std::list<Sequence>::iterator next = ++current;
+        while (next != _list.end() &&
+                next->slot() <= current->back_slot())
+            ++next;
 
-        for (std::vector<int>::iterator it = _translations[next_candidate].begin();
-                it != _translations[next_candidate].end(); ++it) {
-            Pair p = pair_factory.make_pair( next_candidate, *it );
-
-            if( current->is_close_to(p) )
-                ;
+        if (next != _list.end() &&
+                current->last_pair().is_close_to(next->first_pair())) {
+            current->merge(*next);
+            next = _list.erase(next);
+            ++combined;
         }
 
-        if (current == _list.end())
-            current = _list.begin();
-        if (pairs_added == 0)
-            break;
-    }
+        ++current;
 
-    // at this point, we can clear the translation candidates
-    _translations.clear();
+        /*
+        if (abs(next->slot() - current->back_slot()) > Params::get().closeness()) {
+            int slot = current->slot();
+            while (slot == current->slot()) {
+                ++current;
+            }
+        }
+        */
+
+        if (current == _list.end() || next == _list.end()) {
+            if (combined == 0)
+                break;
+            else
+                current = _list.begin();
+        }
+
+    }
 }
+
+#if 0
+// this is total bs
+// scoring needs to be moved to its own class,
+// probably scoring methods should be functors
+// or something
+namespace {
+    enum {
+        SEQ_LENGTH = 1,
+        INDEX_DIFF,
+        BI_SIM
+    } scoring_methods;
+}
+
+void Candidates::assign_scores() {
+    std::vector<float> score_max;
+
+    for( std::list<Sequence>::const_iterator seq = _list.begin(); seq != _list.end(); ++seq ) {
+        for( std::list<Pair>::const_iterator p = seq->begin(); p != seq->end(); ++p )
+            ;
+    }
+}
+#endif

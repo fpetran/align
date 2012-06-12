@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.8)
 project (align)
 option( build_tests "Build all unit tests" )
 
-set( align_SRCS align.cpp text.cpp dictionary.cpp string_impl.cpp )
+set( align_SRCS align.cpp text.cpp dictionary.cpp string_impl.cpp params.cpp containers.cpp )
 set( exec_SRCS main.cpp ${align_SRCS} )
 
 # set module path that find modules from the source tree can be used
@@ -19,6 +19,10 @@ set (align_FILE_BASE "${PROJECT_SOURCE_DIR}/test_data")
 set (align_TEST_E "21_(Ba).txt")
 set (align_TEST_F "65_(M21).txt")
 
+# default value for params
+set (align_DEFAULT_MAX_SKIP 1)
+set (align_DEFAULT_CLOSENESS 2)
+
 # this is for stuff that can be set by cmake
 configure_file (
     "${PROJECT_SOURCE_DIR}/align_config.h.in"
@@ -26,7 +30,7 @@ configure_file (
     )
 
 # os introspection
-find_package( Boost 1.48 REQUIRED ) # not yet used, for po
+find_package( Boost 1.48 COMPONENTS program_options REQUIRED )
 find_package( ICU 4.8 REQUIRED )    # w.i.p making it string impl agnostic
 # TODO :   bi_sim
 
@@ -56,6 +60,7 @@ set ( CMAKE_CXX_FLAGS_DEBUG "-g -pg" )
 # normal executable
 include_directories( ${ICU_INCLUDE_DIRS} ${PROJECT_BINARY_DIR} )
 add_executable( align ${exec_SRCS} )
+target_link_libraries( align ${Boost_LIBRARIES} )
 target_link_libraries( align ${ICU_LIBRARIES} )
 
 # test target - -Dbuild_tests=1

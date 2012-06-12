@@ -1,6 +1,8 @@
 // Copyright 2012 Florian Petran
 #include"text.h"
 
+#include"containers.h"
+
 #include<string>
 #include<vector>
 
@@ -13,8 +15,7 @@ Dictionary::Dictionary(const char* e, const char* f) {
 
 
 void Dictionary::get_dict_fname(const string& e_name, const string& f_name) {
-    // XXX path from po
-    string line = ALIGN_DICT_BASE;
+    string line = Params::get().dict_base();
     line += "/INDEX";
 
     char c_line[255];
@@ -38,8 +39,7 @@ void Dictionary::get_dict_fname(const string& e_name, const string& f_name) {
     index_file.clear();
     index_file.close();
 
-    // XXX path from po
-    _dict_fname = ALIGN_DICT_BASE;
+    _dict_fname = Params::get().dict_base();
     _dict_fname += line.substr(0, line.find(":"));
 }
 
@@ -82,7 +82,7 @@ void Dictionary::open(const char* e_name, const char* f_name) {
         extract(line, div + 3, line.length(), &tword);
         lower_case(&tword);
 
-        _storage[ _e->_wordlist[sword] ] = _f->_wordlist[tword];
+        _storage[ _e->_wordlist[sword] ].push_back( _f->_wordlist[tword] );
     }
 
 
@@ -94,16 +94,24 @@ Dictionary::~Dictionary() {
     delete _f;
 }
 
-const std::vector<int>& Dictionary::lookup(const Word& lemma) const {
+TranslationsEntry* Dictionary::lookup(const Word& lemma) const {
     if (lemma._text != _e)
         throw std::runtime_error("Text of word to look up doesn't match e");
 
-    return _f->index(_storage.at(lemma));
+    TranslationsEntry *occurrences = new TranslationsEntry;
+
+    for( std::list<Word>::const_iterator tr = _storage.at(lemma).begin();
+            tr != _storage.at(lemma).end(); ++tr )
+        for( TranslationsEntry::const_iterator ii = _f->index(*tr).begin();
+                ii != _f->index(*tr).end(); ++ii )
+            occurrences->push_back( *ii );
+
+    return occurrences;
 }
 
 bool Dictionary::has(const Word& lemma) const {
     if (lemma._text != _e)
         throw std::runtime_error("Text of word to look up doesn't match e");
 
-    return _storage.count(lemma) == 1;
+    return _storage.count(lemma) >= 1;
 }

@@ -4,7 +4,7 @@
 
 #include<string>
 #include<fstream>
-#include<vector>
+#include<list>
 #include<map>
 #include<algorithm>
 #include<memory>
@@ -12,6 +12,7 @@
 
 #include"align_config.h"
 #include"string_impl.h"
+#include"params.h"
 
 class Text;
 
@@ -68,6 +69,8 @@ class Word {
 
 
 typedef std::map<string_impl, Word> Wordlist;
+typedef std::list<int> TranslationsEntry;
+typedef std::map<int, TranslationsEntry*> Translations;
 
 
 /**
@@ -95,7 +98,7 @@ class Dictionary {
         void open(const char*, const char*);
         //< open a dictionary file over the two file names provided
 
-        const std::vector<int>& lookup(const Word&) const;
+        TranslationsEntry* lookup(const Word&) const;
         //< return all indexes in f where there are translations for w
         //< currently, this throws if the word isn't stored
 
@@ -111,7 +114,7 @@ class Dictionary {
 
         Text *_e, *_f;
         std::string _dict_fname;
-        std::map<Word, Word> _storage;
+        std::map<Word, std::list<Word> > _storage;
 
         const Dictionary& operator=(const Dictionary&) { return *this; }
         Dictionary(const Dictionary&) {}
@@ -136,7 +139,7 @@ class Text {
 
         inline int length() const { return _length; }
 
-        inline const std::vector<int>& index(const Word& w) const {
+        inline const std::list<int>& index(const Word& w) const {
             return _indexes.at(w);
         }
         inline const int frequency(const Word& w) const {
@@ -155,7 +158,7 @@ class Text {
         Text(const Text&) {}
         const Text& operator=(const Text&) { return *this; }
 
-        std::map<Word, std::vector<int> > _indexes;
+        std::map<Word, std::list<int> > _indexes;
         std::vector<Word> _words;
         int _length;
 };

@@ -1,7 +1,6 @@
 // Copyright 2012 Florian Petran
 #include"text.h"
 #include<string>
-#include<vector>
 
 Word::Word(Text* text, std::shared_ptr<string_impl> str) {
     _text = text;
@@ -85,7 +84,7 @@ Text::Text(const char* fname) {
 
 
         if (_indexes.find(_words.back()) == _indexes.end())
-            _indexes[_words.back()] = std::vector<int>();
+            _indexes[_words.back()] = std::list<int>();
         _indexes[_words.back()].push_back(_length);
 
         ++_length;
