@@ -50,6 +50,10 @@ int Pair::slot() const {
     return _ei;
 }
 
+int Pair::target_slot() const {
+    return _fi;
+}
+
 bool Pair::is_close_to(const Pair& that) const {
     return
             this->_ei != that._ei

@@ -53,9 +53,20 @@ SequenceContainer::SequenceContainer(const Candidates& c) {
     this->_translations = c._translations;
 }
 
-void SequenceContainer::make() {
+std::list<Sequence>::const_iterator SequenceContainer::begin() const {
+    return _list.begin();
+}
+std::list<Sequence>::const_iterator SequenceContainer::end() const {
+    return _list.end();
+}
+
+void SequenceContainer::make(const BreakAfterPhase br_phase) {
     initial_sequences();
+    if( br_phase == BreakAfterInitial )
+        return;
     expand_sequences();
+    if( br_phase == BreakAfterExpand )
+        return;
     merge_sequences();
 }
 
@@ -63,8 +74,7 @@ void SequenceContainer::initial_sequences() {
     Text *e = _dict->get_e();
 
     Translations::iterator
-        me = _translations.begin(), you = me;
-    ++you;
+        me = _translations.begin(), you = ++me;
 
     while (me != _translations.end() && you != _translations.end()) {
         // skip words with no candidate

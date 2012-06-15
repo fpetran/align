@@ -30,11 +30,24 @@ class Candidates {
         const Dictionary* _dict;
 };
 
+// this should use enum class for strongly typed enums
+// however, it appears to be not implemented yet by gcc,
+// which kind of sucks
+enum BreakAfterPhase {
+    BreakAfterInitial,
+    BreakAfterExpand,
+    BreakAfterMerge,
+    DontBreak
+};
+
 class SequenceContainer {
     public:
         explicit SequenceContainer(const Candidates&);
 
-        void make();
+        void make(const BreakAfterPhase = DontBreak);
+
+        std::list<Sequence>::const_iterator begin() const;
+        std::list<Sequence>::const_iterator end() const;
 
     private:
         PairFactory* pair_factory;

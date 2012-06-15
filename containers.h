@@ -13,14 +13,14 @@ class PairFactory;
 
 class Pair {
     friend class PairFactory;
-    friend class Sequence;
     public:
         bool is_close_to(const Pair&) const;
         const Word& source() const;
         const Word& target() const;
+        int slot() const;
+        int target_slot() const;
     protected:
         Pair(const Word&, int, const Word&, int);
-        int slot() const;
     private:
         Word _source, _target;
         int _fi, _ei;
