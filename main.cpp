@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     // call a function 
     // ( "closeness,c",
     //   po::value<unsigned int>()
-    //   ->notifier( &(Params::get().set_closeness) ),
+    //   ->notifier( &(Params::get()->set_closeness) ),
     //   "closeness criteria" )
 
     po::variables_map m;
@@ -56,11 +56,11 @@ int main(int argc, char* argv[]) {
     po::notify(m);
 
     if (m.count("skip"))
-        Params::get().set_max_skip(skip);
+        Params::get()->set_max_skip(skip);
     if (m.count("closeness"))
-        Params::get().set_closeness(closeness);
+        Params::get()->set_closeness(closeness);
     if (m.count("dictionary"))
-        Params::get().set_dict_base(dict_base);
+        Params::get()->set_dict_base(dict_base);
 
     if (m.count("help")) {
         std::cout << desc << std::endl;
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 #else
-    Params::get().set_dict_base( ALIGN_DICT_BASE );
+    Params::get()->set_dict_base( ALIGN_DICT_BASE );
 #endif // ALIGN_USE_BUILTIN_PARAM
 
 

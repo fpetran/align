@@ -54,11 +54,17 @@ int Pair::target_slot() const {
     return _fi;
 }
 
-bool Pair::is_close_to(const Pair& that) const {
+bool Pair::targets_close(const Pair& that) const {
+    // TODO parametrize monotony constraint
     return
             this->_ei != that._ei
-        &&  abs(this->_ei - that._ei) <= Params::get().closeness()
-        &&  abs(this->_fi - that._fi) <= Params::get().closeness();
+        &&  this->_ei < that._ei
+        &&  this->_fi < that._fi
+        &&  abs(this->_fi - that._fi) <= Params::get()->closeness();
+}
+bool Pair::both_close(const Pair& that) const {
+    return this->targets_close(that)
+        && abs(this->_ei - that._ei) <= Params::get()->closeness();
 }
 
 const Word& Pair::source() const { return _source; }

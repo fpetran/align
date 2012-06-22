@@ -14,7 +14,8 @@ class PairFactory;
 class Pair {
     friend class PairFactory;
     public:
-        bool is_close_to(const Pair&) const;
+        bool targets_close(const Pair&) const;
+        bool both_close(const Pair&) const;
         const Word& source() const;
         const Word& target() const;
         int slot() const;

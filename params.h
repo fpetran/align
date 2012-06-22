@@ -12,7 +12,7 @@
  **/
 class Params {
     public:
-        static Params& get();
+        static Params* get();
         unsigned int max_skip();
         void set_max_skip( unsigned int );
         unsigned int closeness();

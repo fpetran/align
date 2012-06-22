@@ -15,7 +15,7 @@ Dictionary::Dictionary(const char* e, const char* f) {
 
 
 void Dictionary::get_dict_fname(const string& e_name, const string& f_name) {
-    string line = Params::get().dict_base();
+    string line = Params::get()->dict_base();
     line += "/INDEX";
 
     char c_line[255];
@@ -39,7 +39,7 @@ void Dictionary::get_dict_fname(const string& e_name, const string& f_name) {
     index_file.clear();
     index_file.close();
 
-    _dict_fname = Params::get().dict_base();
+    _dict_fname = Params::get()->dict_base();
     _dict_fname += line.substr(0, line.find(":"));
 }
 

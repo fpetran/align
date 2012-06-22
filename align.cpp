@@ -74,7 +74,8 @@ void SequenceContainer::initial_sequences() {
     Text *e = _dict->get_e();
 
     Translations::iterator
-        me = _translations.begin(), you = ++me;
+        me = _translations.begin(), you = me;
+    ++you;
 
     while (me != _translations.end() && you != _translations.end()) {
         // skip words with no candidate
@@ -84,15 +85,20 @@ void SequenceContainer::initial_sequences() {
             ++skipped;
         }
 
-        if (skipped <= Params::get().max_skip())
+        if (skipped <= Params::get()->max_skip())
             for (TranslationsEntry::iterator t1 = me->second->begin();
                     t1 != me->second->end(); ++t1) {
+
                 Pair p1 = pair_factory->make_pair(me->first, *t1);
                 for (TranslationsEntry::iterator t2 = you->second->begin();
                         t2 != you->second->end(); ++t2) {
+
                     Pair p2 = pair_factory->make_pair(you->first, *t2);
-                    if (p1.is_close_to(p2))
+                    // TODO allow for multiple sequence to be formed
+                    if (p1.targets_close(p2)) {
                         _list.push_back(Sequence(*_dict, p1, p2));
+                        t2 = you->second->erase( t2 );
+                    }
                 }
             }
         ++me;
@@ -116,7 +122,7 @@ void SequenceContainer::expand_sequences() {
             ++next_slot;
 
         if (next_slot < _translations.size()
-          && next_slot - current->back_slot() <= Params::get().closeness()) {
+          && next_slot - current->back_slot() <= Params::get()->closeness()) {
             // go through all translations for next_candidate
             TranslationsEntry::iterator it =
                 _translations[next_slot]->begin();
@@ -124,7 +130,7 @@ void SequenceContainer::expand_sequences() {
             while (it != _translations[next_slot]->end()) {
                 Pair p = pair_factory->make_pair( next_slot, *it );
 
-                if (current->last_pair().is_close_to(p)) {
+                if (current->last_pair().both_close(p)) {
                     // TODO if pairs_added >= 1
                     // make a copy of original sequence
                     // add pair to sequence
@@ -145,7 +151,7 @@ void SequenceContainer::expand_sequences() {
 
     // at this point, we can clear the translation candidates
     // also, the TranslationsEntry ptr must be deleted here, otherwise,
-    // leakage will occur
+    // leakage will probably occur
 
     for (Translations::iterator tr = _translations.begin();
             tr != _translations.end(); ++tr ) {
@@ -166,7 +172,7 @@ void SequenceContainer::merge_sequences() {
             ++next;
 
         if (next != _list.end() &&
-                current->last_pair().is_close_to(next->first_pair())) {
+                current->last_pair().both_close(next->first_pair())) {
             current->merge(*next);
             next = _list.erase(next);
             ++combined;
@@ -175,7 +181,7 @@ void SequenceContainer::merge_sequences() {
         ++current;
 
         /*
-        if (abs(next->slot() - current->back_slot()) > Params::get().closeness()) {
+        if (abs(next->slot() - current->back_slot()) > Params::get()->closeness()) {
             int slot = current->slot();
             while (slot == current->slot()) {
                 ++current;

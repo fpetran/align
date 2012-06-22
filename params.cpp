@@ -11,8 +11,8 @@ Params::Params() {
     ;
 }
 
-Params& Params::get() {
-    return *_instance;
+Params* Params::get() {
+    return _instance;
 }
 
 unsigned int Params::closeness() { return _closeness; }

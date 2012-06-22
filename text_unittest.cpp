@@ -14,7 +14,7 @@
 class WordTest_Fixture : public testing::Test {
     protected:
         virtual void SetUp() {
-            Params::get().set_dict_base( ALIGN_DICT_BASE );
+            Params::get()->set_dict_base( ALIGN_DICT_BASE );
             _dict.open(ALIGN_TEST_E, ALIGN_TEST_F);
             _f = _dict.get_f();
             _e = _dict.get_e();
@@ -29,50 +29,10 @@ class WordTest_Fixture : public testing::Test {
         Text *_e, *_f;
 };
 
-class AlignTest_Fixture : public testing::Test {
-    protected:
-        virtual void SetUp() {
-            Params::get().set_dict_base( ALIGN_DICT_BASE );
-            std::string e =
-                static_cast<std::string>(ALIGN_FILE_BASE);
-            std::string f = e;
-
-            e += "/test_e.txt";
-            f += "/test_f.txt";
-
-            _dict.open( e.c_str(), f.c_str() );
-            //_f = _dict.get_f();
-            //_e = _dict.get_e();
-
-
-            // fill expected translations collection
-            fill_entry( &tr_exp, 8, 19, 29, 39 );
-            fill_entry( &tr_exp, 9, 20, 34, 38 );
-            fill_entry( &tr_exp, 10, 21, 9, 13 );
-            fill_entry( &tr_exp, 12, 22, 26, 27 );
-            fill_entry( &tr_exp, 13, 23, 27, 34 );
-        }
-        virtual void TearDown() {
-        }
-
-        Dictionary _dict;
-        Translations tr_exp;
-        void fill_entry( Translations* tr,
-                int src,
-                int one, int two, int three ) {
-            TranslationsEntry ex_entry;
-            ex_entry.push_back( one );
-            ex_entry.push_back( two );
-            ex_entry.push_back( three );
-            tr->insert( make_pair( src, new TranslationsEntry(ex_entry) ) );
-        }
-};
 
 class WordTest : public WordTest_Fixture {
 };
 
-class AlignTest : public AlignTest_Fixture {
-};
 
 TEST_F(WordTest, Comparison) {
     // test comparison operator
@@ -120,13 +80,6 @@ TEST_F(WordTest, TextPtrF) {
         EXPECT_TRUE( (*_f)[i-1].get_text() == (*_f)[i].get_text() );
 }
 
-
-namespace {
-    void printWord(const Word& w) {
-        printString(w.get_str());
-    }
-}
-
 TEST_F(WordTest, LookupTest) {
     // test if the lookup works correctly
     // test translation pair: pegraben - begraben
@@ -140,81 +93,6 @@ TEST_F(WordTest, LookupTest) {
     EXPECT_EQ(*tr, 8478);
     ++tr;
     EXPECT_EQ(*tr, 8558);
-}
-
-TEST_F(AlignTest, CandidatesTest) {
-    Candidates c(_dict);
-    c.collect();
-
-    Translations::const_iterator act = c.begin(), exp = tr_exp.begin();
-
-    while( act != c.end() && exp != tr_exp.end() ) {
-        EXPECT_EQ( act->first, exp->first );
-        EXPECT_EQ( *(act->second), *(exp->second) );
-        ++act; ++exp;
-    }
-
-}
-
-TEST_F(AlignTest, SequenceTestInital) {
-    Candidates c(_dict);
-    c.collect();
-
-    SequenceContainer sc(c);
-    sc.make(BreakAfterInitial);
-    for (std::list<Sequence>::const_iterator sl = sc.begin();
-            sl != sc.end(); ++sl) {
-        std::cout << "SEQUENCE: ---" << std::endl;
-        for (std::list<Pair>::const_iterator sq = sl->begin();
-                sq != sl->end(); ++sq) {
-            std::cout << "source index: " << sq->slot() << " txt: ";
-            printWord( sq->source() );
-            std::cout << "target index: " << sq->target_slot() << " txt: ";
-            printWord( sq->target() );
-        }
-        std::cout << "-------------" << std::endl;
-    }
-}
-
-TEST_F(AlignTest, SequenceTestExpand) {
-    Candidates c(_dict);
-    c.collect();
-
-    SequenceContainer sc(c);
-    sc.make(BreakAfterExpand);
-    for (std::list<Sequence>::const_iterator sl = sc.begin();
-            sl != sc.end(); ++sl) {
-        std::cout << "SEQUENCE: ---" << std::endl;
-        for (std::list<Pair>::const_iterator sq = sl->begin();
-                sq != sl->end(); ++sq) {
-            std::cout << "source index: " << sq->slot() << " txt: ";
-            printWord( sq->source() );
-            std::cout << "target index: " << sq->target_slot() << " txt: ";
-            printWord( sq->target() );
-        }
-        std::cout << "-------------" << std::endl;
-    }
-}
-
-TEST_F(AlignTest, SequenceTestMerge) {
-    Candidates c(_dict);
-    c.collect();
-
-    SequenceContainer sc(c);
-    sc.make(BreakAfterMerge);
-
-    for (std::list<Sequence>::const_iterator sl = sc.begin();
-            sl != sc.end(); ++sl) {
-        std::cout << "SEQUENCE: ---" << std::endl;
-        for (std::list<Pair>::const_iterator sq = sl->begin();
-                sq != sl->end(); ++sq) {
-            std::cout << "source index: " << sq->slot() << " txt: ";
-            printWord( sq->source() );
-            std::cout << "target index: " << sq->target_slot() << " txt: ";
-            printWord( sq->target() );
-        }
-        std::cout << "-------------" << std::endl;
-    }
 }
 
 int main(int argc, char** argv) {
