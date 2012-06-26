@@ -57,10 +57,19 @@ class Sequence {
         int slot() const;
         //< starting slot of the sequence
         int back_slot() const;
-        const Pair& first_pair();
-        const Pair& last_pair();
-        std::list<Pair>::const_iterator begin() const;
-        std::list<Pair>::const_iterator end() const;
+        //< slot of the last pair in the sequence
+        bool has_target(unsigned int);
+        bool has_target(const Pair&);
+        //< checks if a target index is already in
+        //< the sequence. POTENTIALLY EXPENSIVE
+
+        const Pair& first_pair() const;
+        const Pair& last_pair() const;
+
+        typedef std::list<Pair>::const_iterator iterator;
+
+        Sequence::iterator begin() const;
+        Sequence::iterator end() const;
 
     private:
         std::list<Pair> _list;

@@ -90,7 +90,7 @@ void Sequence::add(const Pair& p) {
 }
 
 void Sequence::merge(const Sequence& that) {
-    for (std::list<Pair>::const_iterator pp = that._list.begin();
+    for (Sequence::iterator pp = that._list.begin();
             pp != that._list.end(); ++pp)
         this->_list.push_back(*pp);
     _back_slot = _list.back().slot();
@@ -104,17 +104,29 @@ int Sequence::back_slot() const
     { return _back_slot; }
     //{ return _list.back().slot(); }
 
-std::list<Pair>::const_iterator Sequence::begin() const
+bool Sequence::has_target(unsigned int target_pos) {
+    for (Sequence::iterator pp = _list.begin();
+            pp != _list.end(); ++pp)
+        if (pp->target_slot() == target_pos)
+            return true;
+    return false;
+}
+
+bool Sequence::has_target( const Pair& other ) {
+    return this->has_target(other.target_slot());
+}
+
+Sequence::iterator Sequence::begin() const
     { return _list.begin(); }
 
-std::list<Pair>::const_iterator Sequence::end() const
+Sequence::iterator Sequence::end() const
     { return _list.end(); }
 
-const Pair& Sequence::first_pair() {
+const Pair& Sequence::first_pair() const {
     return _list.front();
 }
 
-const Pair& Sequence::last_pair() {
+const Pair& Sequence::last_pair() const {
     return _list.back();
 }
 
