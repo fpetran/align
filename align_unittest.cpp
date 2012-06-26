@@ -97,18 +97,18 @@ TEST_F(AlignTest, SequenceTestInital) {
     // put actual indexes values into array too
     int actual_sequence[12];
     int i = 0;
-    for (std::list<Sequence>::const_iterator sl = sc.begin();
-            sl != sc.end(); ++sl)
-        for (std::list<Pair>::const_iterator sq = sl->begin();
-                sq != sl->end(); ++sq) {
+    for (SequenceContainer::iterator seq = sc.begin();
+            seq != sc.end(); ++seq)
+        for (Sequence::iterator pair = seq->begin();
+                pair != seq->end(); ++pair) {
             EXPECT_TRUE( i < 12 );
-            actual_sequence[i] = sq->slot();
-            actual_sequence[i+1] = sq->target_slot();
+            actual_sequence[i] = pair->slot();
+            actual_sequence[i+1] = pair->target_slot();
             i += 2;
         }
 
-    for (int i = 0; i < 12; ++i)
-        EXPECT_EQ( expected_sequence[i], actual_sequence[i] );
+    for (int ii = 0; ii < 12; ++ii)
+        EXPECT_EQ( expected_sequence[ii], actual_sequence[ii] );
 }
 
 TEST_F(AlignTest, SequenceTestExpand) {
@@ -117,18 +117,35 @@ TEST_F(AlignTest, SequenceTestExpand) {
 
     SequenceContainer sc(c);
     sc.make(BreakAfterExpand);
-    for (std::list<Sequence>::const_iterator sl = sc.begin();
-            sl != sc.end(); ++sl) {
-        std::cout << "SEQUENCE: ---" << std::endl;
-        for (std::list<Pair>::const_iterator sq = sl->begin();
-                sq != sl->end(); ++sq) {
-            std::cout << "source index: " << sq->slot() << " txt: ";
-            printWord( sq->source() );
-            std::cout << "target index: " << sq->target_slot() << " txt: ";
-            printWord( sq->target() );
+
+    int expected_sequence[14] = {
+        8, 19,
+        9, 20,
+        //--
+        10, 21,
+        12, 22,
+        13, 23,
+        //--
+        12, 26,
+        13, 27
+    };
+
+    int actual_sequence[14];
+    int i = 0;
+
+    for (SequenceContainer::iterator seq = sc.begin();
+            seq != sc.end(); ++seq)
+        for (Sequence::iterator pair = seq->begin();
+                pair != seq->end(); ++pair) {
+            EXPECT_TRUE( i < 14 );
+            actual_sequence[i] = pair->slot();
+            actual_sequence[i+1] = pair->target_slot();
+            i += 2;
         }
-        std::cout << "-------------" << std::endl;
-    }
+
+    for (int ii = 0; ii < 13; ++ii)
+        EXPECT_EQ( expected_sequence[ii], actual_sequence[ii] );
+
 }
 
 TEST_F(AlignTest, SequenceTestMerge) {
@@ -138,18 +155,54 @@ TEST_F(AlignTest, SequenceTestMerge) {
     SequenceContainer sc(c);
     sc.make(BreakAfterMerge);
 
-    for (std::list<Sequence>::const_iterator sl = sc.begin();
-            sl != sc.end(); ++sl) {
-        std::cout << "SEQUENCE: ---" << std::endl;
-        for (std::list<Pair>::const_iterator sq = sl->begin();
-                sq != sl->end(); ++sq) {
-            std::cout << "source index: " << sq->slot() << " txt: ";
-            printWord( sq->source() );
-            std::cout << "target index: " << sq->target_slot() << " txt: ";
-            printWord( sq->target() );
-        }
-        std::cout << "-------------" << std::endl;
+    int expected_one[10] = {
+        8, 19,
+        9, 20,
+        10, 21,
+        12, 22,
+        13, 23
+    };
+
+    int expected_two[4] = {
+        12, 26,
+        13, 27
+    };
+
+
+    // lots of hardcoded assumptions here. we should
+    // have two sequences in sc with the content as
+    // above
+    SequenceContainer::iterator seq = sc.begin();
+    int actual_one[10];
+    int i = 0;
+
+    for (Sequence::iterator pair = seq->begin();
+            pair != seq->end(); ++pair) {
+        EXPECT_TRUE( i < 10 );
+        actual_one[i] = pair->slot();
+        actual_one[i+1] = pair->target_slot();
+        i += 2;
     }
+    ++seq;
+
+    int actual_two[4];
+    i = 0;
+    for (Sequence::iterator pair = seq->begin();
+            pair != seq->end(); ++pair) {
+        EXPECT_TRUE( i < 4 );
+        actual_two[i] = pair->slot();
+        actual_two[i+1] = pair->target_slot();
+        i += 2;
+    }
+    ++seq;
+
+    EXPECT_TRUE( seq == sc.end() );
+
+    for (int ii = 0; ii < 9; ++ii)
+        EXPECT_EQ( expected_one[ii], actual_one[ii] );
+    for (int ii = 0; ii < 3; ++ii)
+        EXPECT_EQ( expected_two[ii], actual_two[ii] );
+
 }
 
 int main(int argc, char** argv) {
