@@ -9,22 +9,6 @@
 Candidates::Candidates(const Dictionary& dict) {
     _dict = &dict;
     pair_factory = new PairFactory(dict);
-
-    // this sucks. candidates constructor shouldn't do
-    // the alignment work. but for now, i'll leave it
-    // until i've found a better place for it.
-    // TODO XXX FIXME
-    //
-    // in principle, candidates ctor should collect candidates
-    // sequences init, expanding and merging should then be
-    // done in a separate sequence container object
-    //collect_candidates();
-    //initial_sequences();
-    //expand_sequences();
-    // repeat same process in reverse
-    //merge_sequences();
-    // collect scores
-    // remove all but topranking
 }
 
 Candidates::~Candidates() {
@@ -53,10 +37,10 @@ SequenceContainer::SequenceContainer(const Candidates& c) {
     this->_translations = c._translations;
 }
 
-std::list<Sequence>::const_iterator SequenceContainer::begin() const {
+SequenceContainer::iterator SequenceContainer::begin() const {
     return _list.begin();
 }
-std::list<Sequence>::const_iterator SequenceContainer::end() const {
+SequenceContainer::iterator SequenceContainer::end() const {
     return _list.end();
 }
 
@@ -67,7 +51,10 @@ void SequenceContainer::make(const BreakAfterPhase br_phase) {
     expand_sequences();
     if( br_phase == BreakAfterExpand )
         return;
+    // repeat same process in reverse
     merge_sequences();
+    // collect scores
+    // remove all but topranking
 }
 
 void SequenceContainer::initial_sequences() {
@@ -97,7 +84,8 @@ void SequenceContainer::initial_sequences() {
                     // TODO allow for multiple sequence to be formed
                     if (p1.targets_close(p2)) {
                         _list.push_back(Sequence(*_dict, p1, p2));
-                        t2 = you->second->erase( t2 );
+                        t2 = you->second->erase(t2);
+                        t1 = me->second->erase(t1);
                     }
                 }
             }
@@ -108,51 +96,48 @@ void SequenceContainer::initial_sequences() {
 
 void SequenceContainer::expand_sequences() {
     unsigned int pairs_added;
-    std::list<Sequence>::iterator current = _list.begin();
 
     do {
         pairs_added = 0;
-        // look at the next slot from the end of the sequence
-        unsigned int next_slot = current->back_slot() + 1;
+        for (std::list<Sequence>::iterator seq = _list.begin();
+                seq != _list.end(); ++seq) {
 
-        // unless that has no candidate
-        // or it exceeds max_cand_diff TODO
-        while (next_slot < _translations.size()
-                && _translations[next_slot]->size() == 0)
+            Translations::iterator next_slot =
+                _translations.find(seq->slot());
             ++next_slot;
 
-        if (next_slot < _translations.size()
-          && next_slot - current->back_slot() <= Params::get()->closeness()) {
-            // go through all translations for next_candidate
-            TranslationsEntry::iterator it =
-                _translations[next_slot]->begin();
-
-            while (it != _translations[next_slot]->end()) {
-                Pair p = pair_factory->make_pair( next_slot, *it );
-
-                if (current->last_pair().both_close(p)) {
-                    // TODO if pairs_added >= 1
-                    // make a copy of original sequence
-                    // add pair to sequence
-                    current->add(p);
-                    ++pairs_added;
-                    it = _translations[next_slot]->erase( it );
-                }
-                else
-                    ++it;
+            while (next_slot != _translations.end()
+                    && ! next_slot->second->empty()) {
+                if (seq->back_slot() - next_slot->first >= Params::get()->closeness())
+                    break;
+                ++next_slot;
             }
+
+            if (next_slot == _translations.end())
+                continue;
+
+            if (next_slot->second->empty()
+                    || next_slot->first - seq->back_slot() > Params::get()->closeness())
+                continue;
+
+
+            for (TranslationsEntry::iterator tr = next_slot->second->begin();
+                    tr != next_slot->second->end(); ++tr) {
+                Pair p = pair_factory->make_pair( next_slot->first, *tr );
+                if (seq->last_pair().targets_close(p)
+                        && ! seq->has_target( p )) {
+                    seq->add(p);
+                    ++pairs_added;
+                    tr = next_slot->second->erase(tr);
+                }
+            }
+
         }
-
-        ++current;
-        if (current == _list.end())
-            current = _list.begin();
     } while (pairs_added != 0);
-
 
     // at this point, we can clear the translation candidates
     // also, the TranslationsEntry ptr must be deleted here, otherwise,
     // leakage will probably occur
-
     for (Translations::iterator tr = _translations.begin();
             tr != _translations.end(); ++tr ) {
         delete tr->second;
@@ -162,41 +147,31 @@ void SequenceContainer::expand_sequences() {
 
 void SequenceContainer::merge_sequences() {
     unsigned int combined = 0;
-    std::list<Sequence>::iterator current = _list.begin();
 
-    while (true) {
+    do {
         combined = 0;
-        std::list<Sequence>::iterator next = ++current;
-        while (next != _list.end() &&
-                next->slot() <= current->back_slot())
-            ++next;
 
-        if (next != _list.end() &&
-                current->last_pair().both_close(next->first_pair())) {
-            current->merge(*next);
-            next = _list.erase(next);
-            ++combined;
-        }
+        // can't use our typedef here, because these aren't const
+        for (std::list<Sequence>::iterator seq = _list.begin();
+                seq != _list.end(); ++seq) {
+            std::list<Sequence>::iterator other = seq;
 
-        ++current;
+            while (other != _list.end() &&
+                    other->slot() <= seq->back_slot())
+                ++other;
 
-        /*
-        if (abs(next->slot() - current->back_slot()) > Params::get()->closeness()) {
-            int slot = current->slot();
-            while (slot == current->slot()) {
-                ++current;
+            if (other == _list.end())
+                continue; // break instead?
+
+            if (seq->last_pair().both_close(other->first_pair())) {
+                seq->merge(*other);
+                other = _list.erase(other);
+                ++combined;
             }
         }
-        */
 
-        if (current == _list.end() || next == _list.end()) {
-            if (combined == 0)
-                break;
-            else
-                current = _list.begin();
-        }
+    } while (combined != 0);
 
-    }
 }
 
 #if 0

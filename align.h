@@ -20,6 +20,9 @@ class Candidates {
         void collect();
         //< collect all translation candidates
 
+        // XXX this should probably be handled
+        // by typedef'ing an iterator like in the
+        // Sequence and SequenceContainer classes
         Translations::const_iterator begin() const;
         Translations::const_iterator end() const;
 
@@ -46,8 +49,10 @@ class SequenceContainer {
 
         void make(const BreakAfterPhase = DontBreak);
 
-        std::list<Sequence>::const_iterator begin() const;
-        std::list<Sequence>::const_iterator end() const;
+        typedef std::list<Sequence>::const_iterator iterator;
+
+        SequenceContainer::iterator begin() const;
+        SequenceContainer::iterator end() const;
 
     private:
         PairFactory* pair_factory;
