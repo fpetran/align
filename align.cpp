@@ -1,5 +1,7 @@
 // Copyright 2012 Florian Petran
 #include<map>
+#include<vector>
+
 #include<iostream>
 
 #include"align.h"
@@ -8,11 +10,11 @@
 
 Candidates::Candidates(const Dictionary& dict) {
     _dict = &dict;
-    pair_factory = new PairFactory(dict);
+    pair_factory = std::shared_ptr<PairFactory>(new PairFactory(dict));
 }
 
 Candidates::~Candidates() {
-    delete pair_factory;
+    pair_factory.reset();
 }
 
 void Candidates::collect() {
@@ -37,6 +39,11 @@ SequenceContainer::SequenceContainer(const Candidates& c) {
     this->_translations = c._translations;
 }
 
+
+SequenceContainer::~SequenceContainer() {
+    pair_factory.reset();
+}
+
 SequenceContainer::iterator SequenceContainer::begin() const {
     return _list.begin();
 }
@@ -53,6 +60,9 @@ void SequenceContainer::make(const BreakAfterPhase br_phase) {
         return;
     // repeat same process in reverse
     merge_sequences();
+    if( br_phase == BreakAfterMerge )
+        return;
+    collect_scores();
     // collect scores
     // remove all but topranking
 }
@@ -96,6 +106,9 @@ void SequenceContainer::initial_sequences() {
 
 void SequenceContainer::expand_sequences() {
     unsigned int pairs_added;
+    // XXX the checks for closeness
+    // should use abs and check if
+    // next->first > seq->back_slot too
 
     do {
         pairs_added = 0;
@@ -107,17 +120,17 @@ void SequenceContainer::expand_sequences() {
             ++next_slot;
 
             while (next_slot != _translations.end()
-                    && ! next_slot->second->empty()) {
-                if (seq->back_slot() - next_slot->first >= Params::get()->closeness())
+                    && !next_slot->second->empty()) {
+                if (seq->back_slot() - next_slot->first
+                        >= Params::get()->closeness())
                     break;
                 ++next_slot;
             }
 
-            if (next_slot == _translations.end())
-                continue;
-
-            if (next_slot->second->empty()
-                    || next_slot->first - seq->back_slot() > Params::get()->closeness())
+            if (next_slot == _translations.end()
+                    || next_slot->second->empty()
+                    || next_slot->first - seq->back_slot()
+                        > Params::get()->closeness())
                 continue;
 
 
@@ -138,6 +151,7 @@ void SequenceContainer::expand_sequences() {
     // at this point, we can clear the translation candidates
     // also, the TranslationsEntry ptr must be deleted here, otherwise,
     // leakage will probably occur
+    // TODO does this invalidate Candidates' _translations? probably so.
     for (Translations::iterator tr = _translations.begin();
             tr != _translations.end(); ++tr ) {
         delete tr->second;
@@ -174,25 +188,36 @@ void SequenceContainer::merge_sequences() {
 
 }
 
-#if 0
-// this is total bs
-// scoring needs to be moved to its own class,
-// probably scoring methods should be functors
-// or something
-namespace {
-    enum {
-        SEQ_LENGTH = 1,
-        INDEX_DIFF,
-        BI_SIM
-    } scoring_methods;
-}
+void SequenceContainer::collect_scores() {
+    // it's time to settle the score
+    std::list<std::vector<float>> scores_all = std::list<std::vector<float>>();
 
-void Candidates::assign_scores() {
-    std::vector<float> score_max;
+    // collect raw scores for all sequences
+    for (SequenceContainer::iterator seq = _list.begin();
+            seq != _list.end(); ++seq) {
+        scores_all.push_back( std::vector<float>() );
+        for (unsigned int ii = 0; ii < scoring_methods.size(); ++ii)
+            scores_all.back().push_back((*scoring_methods[ii])( *seq ));
+    }
 
-    for( std::list<Sequence>::const_iterator seq = _list.begin(); seq != _list.end(); ++seq ) {
-        for( std::list<Pair>::const_iterator p = seq->begin(); p != seq->end(); ++p )
-            ;
+    // normalize scores
+    for (std::list<std::vector<float>>::iterator sc = scores_all.begin(); sc != scores_all.end(); ++sc)
+        for (unsigned int ii = 0; ii < scoring_methods.size() - 1; ++ii)
+            sc->at(ii) /= scoring_methods.at(ii)->get_max();
+
+    // collect overall score from single methods
+    std::list<std::vector<float>>::iterator score = scores_all.begin();
+    // v-- because nested typedef is const iterator and we modify here!
+    std::list<Sequence>::iterator seq = _list.begin();
+    while (score != scores_all.end() || seq != _list.end()) {
+        float cumul_score = 0;
+        for (std::vector<float>::iterator s = score->begin();
+                s != score->end();
+                ++s)
+            cumul_score += *s;
+        cumul_score /= scoring_methods.size();
+        seq->set_score(cumul_score);
+        ++seq; ++score;
     }
 }
-#endif
+

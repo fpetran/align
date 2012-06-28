@@ -70,13 +70,22 @@ bool Pair::both_close(const Pair& that) const {
 const Word& Pair::source() const { return _source; }
 const Word& Pair::target() const { return _target; }
 
+void Sequence::set_score(const float& s) {
+    _score = s;
+}
+const float& Sequence::get_score() const {
+    return _score;
+}
+
 Sequence::Sequence(const Dictionary& dict, const Pair& p) {
+    _length = 1;
     _dict = &dict;
     this->add(p);
     _slot = _back_slot = p.slot();
 }
 
 Sequence::Sequence(const Dictionary& dict, const Pair& p1, const Pair& p2) {
+    _length = 2;
     _dict = &dict;
     this->add(p1);
     this->add(p2);
@@ -87,6 +96,7 @@ Sequence::Sequence(const Dictionary& dict, const Pair& p1, const Pair& p2) {
 void Sequence::add(const Pair& p) {
     _list.push_back(p);
     _back_slot = p.slot();
+    ++_length;
 }
 
 void Sequence::merge(const Sequence& that) {
@@ -94,6 +104,7 @@ void Sequence::merge(const Sequence& that) {
             pp != that._list.end(); ++pp)
         this->_list.push_back(*pp);
     _back_slot = _list.back().slot();
+    _length += that.length();
 }
 
 int Sequence::slot() const
@@ -104,7 +115,7 @@ int Sequence::back_slot() const
     { return _back_slot; }
     //{ return _list.back().slot(); }
 
-bool Sequence::has_target(unsigned int target_pos) {
+bool Sequence::has_target(int target_pos) {
     for (Sequence::iterator pp = _list.begin();
             pp != _list.end(); ++pp)
         if (pp->target_slot() == target_pos)
@@ -114,6 +125,10 @@ bool Sequence::has_target(unsigned int target_pos) {
 
 bool Sequence::has_target( const Pair& other ) {
     return this->has_target(other.target_slot());
+}
+
+int Sequence::length() const {
+    return _length;
 }
 
 Sequence::iterator Sequence::begin() const

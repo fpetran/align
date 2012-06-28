@@ -2,7 +2,11 @@ cmake_minimum_required (VERSION 2.8)
 project (align)
 option( build_tests "Build all unit tests" )
 
-set( align_SRCS align.cpp text.cpp dictionary.cpp string_impl.cpp params.cpp containers.cpp )
+set( align_SRCS
+    align.cpp params.cpp scorers.cpp
+    containers.cpp text.cpp dictionary.cpp
+    string_impl.cpp
+    )
 set( exec_SRCS main.cpp ${align_SRCS} )
 set( bisim_SRCS bi-sim.cpp )
 

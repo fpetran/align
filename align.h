@@ -6,10 +6,12 @@
 
 #include<list>
 #include<map>
+#include<vector>
 
 #include"text.h"
 #include"params.h"
 #include"containers.h"
+#include"scorers.h"
 
 class Candidates {
     friend class SequenceContainer;
@@ -27,7 +29,7 @@ class Candidates {
         Translations::const_iterator end() const;
 
     protected:
-        PairFactory* pair_factory;
+        std::shared_ptr<PairFactory> pair_factory;
 
         Translations _translations;
         const Dictionary* _dict;
@@ -46,6 +48,7 @@ enum BreakAfterPhase {
 class SequenceContainer {
     public:
         explicit SequenceContainer(const Candidates&);
+        ~SequenceContainer();
 
         void make(const BreakAfterPhase = DontBreak);
 
@@ -55,17 +58,22 @@ class SequenceContainer {
         SequenceContainer::iterator end() const;
 
     private:
-        PairFactory* pair_factory;
+        std::shared_ptr<PairFactory> pair_factory;
         std::list<Sequence> _list;
         Translations _translations;
 
         const Dictionary* _dict;
+
+        ScoringMethods scoring_methods;
+        //< contains all scoring methods as functors
 
         void initial_sequences();
         //< construct initial bigrams of pairs
         void expand_sequences();
         //< expand the sequences at tail end
         void merge_sequences();
+        void collect_scores();
 };
+
 
 #endif // ALIGN_ALIGN_HH

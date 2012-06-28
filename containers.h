@@ -54,11 +54,19 @@ class Sequence {
         //< add a pair to the sequence
         void merge(const Sequence&);
         //< merge another sequence to this
+
         int slot() const;
         //< starting slot of the sequence
         int back_slot() const;
         //< slot of the last pair in the sequence
-        bool has_target(unsigned int);
+
+        int length() const;
+
+        void set_score(const float&);
+        const float& get_score() const;
+
+
+        bool has_target(int);
         bool has_target(const Pair&);
         //< checks if a target index is already in
         //< the sequence. POTENTIALLY EXPENSIVE
@@ -72,9 +80,17 @@ class Sequence {
         Sequence::iterator end() const;
 
     private:
+        Sequence();
+        //< if this is accidentally used, lots of data members
+        //< will go uninitialized
+
         std::list<Pair> _list;
         const Dictionary* _dict;
+
+        float _score;
         unsigned int _slot, _back_slot;
+
+        mutable unsigned int _length;
 };
 
 
