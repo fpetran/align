@@ -1,0 +1,24 @@
+# since we use out of source build, no need to ignore source
+# in fact, should someone try to build in source, all the
+# compiled files should show up in git status to shame him
+
+# OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# vi swap files. vi backup aren't excluded, those shouldn't be
+# produced with scm files
+.*.swp
+
+# cscope/ctags files
+cscope.out
+tags
+
+# gprof/gdb output files
+gmon.out
