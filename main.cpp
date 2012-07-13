@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 
     try {
         std::string e_name = m["source"].as<std::string>(),
-                    f_name = m["source"].as<std::string>();
+                    f_name = m["target"].as<std::string>();
 
         DictionaryFactory* df = DictionaryFactory::get_instance();
         const Dictionary* dict = df->get_dictionary(e_name, f_name);
