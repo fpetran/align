@@ -20,7 +20,7 @@ class ScoringMethods : public std::vector<Scorer*> {
     private:
         ScoringMethods(const ScoringMethods&);
         const ScoringMethods& operator=(const ScoringMethods&);
-        void push_back(Scorer*);
+        void push_back(Scorer*); // NOLINT[readability/function]
         //< private to prevent clients from adding methods
 };
 
@@ -31,6 +31,10 @@ class ScoringMethods : public std::vector<Scorer*> {
  * raw (unnormalized) score for a sequence. The base provides
  * storage and a getter for the maximum of the respective
  * score.
+ *
+ * a virtual dtor is not currently needed, since the derived
+ * scorers don't define their own data members, no matter what
+ * cpplint.py thinks.
  *
  **/
 class Scorer {
@@ -50,7 +54,9 @@ class Scorer {
  **/
 class LengthScorer : public Scorer {
     float operator()(const Sequence&);
-    const char* name() {return "length";};
+    const char* name() {
+        return "length";
+    }
 };
 
 /**
@@ -58,7 +64,9 @@ class LengthScorer : public Scorer {
  **/
 class IndexdiffScorer : public Scorer {
     float operator()(const Sequence&);
-    const char* name() {return "i-diff";};
+    const char* name() {
+        return "i-diff";
+    }
 };
 
 /**
@@ -66,7 +74,9 @@ class IndexdiffScorer : public Scorer {
  **/
 class BisimScorer : public Scorer {
     float operator()(const Sequence&);
-    const char* name() {return "bi_sim";};
+    const char* name() {
+        return "bi_sim";
+    }
 };
 
 #endif // ALIGN_SCORERS_HH

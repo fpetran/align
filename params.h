@@ -1,3 +1,4 @@
+// Copyright 2012 Florian Petran
 #ifndef ALIGN_PARAMS_HH
 #define ALIGN_PARAMS_HH
 #include<string>
@@ -13,16 +14,20 @@
 class Params {
     public:
         static Params* get();
-        unsigned int max_skip();
-        void set_max_skip( unsigned int );
-        unsigned int closeness();
-        void set_closeness( unsigned int );
+
+        int max_skip();
+        void set_max_skip(int);
+        int closeness();
+        void set_closeness(int);
         const std::string& dict_base();
-        void set_dict_base( const std::string& );
+        void set_dict_base(const std::string&);
+
     private:
         static Params* _instance;
         Params();
-        unsigned int _max_skip, _closeness;
+
+        int  _closeness;
+        int _max_skip;
         std::string _dict_base;
         //< base directory for dictionaries
 };
