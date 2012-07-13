@@ -28,47 +28,50 @@
  *  Problem: back_slot() is const -> cache variable must be mutable
  */
 
-PairFactory::PairFactory(const Dictionary& dict) {
-    _dict = &dict;
-}
-
-Pair PairFactory::make_pair(int ei, int fi) {
-    return Pair(
-            _dict->get_e()->at(ei), ei,
-            _dict->get_f()->at(fi), fi
-            );
-}
-
-Pair::Pair(const Word& s, int s_pos, const Word& t, int t_pos) {
-    _source = s;
-    _ei = s_pos;
-    _target = t;
-    _fi = t_pos;
+Pair::Pair(const WordToken& s, const WordToken& t)
+    : _source(s), _target(t) {
 }
 
 int Pair::slot() const {
-    return _ei;
+    return _source.position();
 }
 
 int Pair::target_slot() const {
-    return _fi;
+    return _target.position();
+}
+
+bool Pair::operator==(const Pair& that) const {
+    return this->_source == that._source
+        && this->_target == that._target;
+}
+
+const Pair& Pair::reverse() {
+    WordToken tmp = _source;
+    _source = _target;
+    _target = tmp;
+    return *this;
 }
 
 bool Pair::targets_close(const Pair& that) const {
     // TODO parametrize monotony constraint
     return
-            this->_ei != that._ei
-        &&  this->_ei < that._ei
-        &&  this->_fi < that._fi
-        &&  abs(this->_fi - that._fi) <= Params::get()->closeness();
+            this->_source.position() != that._source.position()
+        &&  this->_source.position() < that._source.position()
+        &&  this->_target.position() < that._target.position()
+        &&     abs(this->_target.position() - that._target.position())
+            <= Params::get()->closeness();
 }
 bool Pair::both_close(const Pair& that) const {
-    return this->targets_close(that)
-        && abs(this->_ei - that._ei) <= Params::get()->closeness();
+    return
+        this->targets_close(that)
+     && abs(this->_source.position() - that._source.position())
+           <= Params::get()->closeness();
 }
 
-const Word& Pair::source() const { return _source; }
-const Word& Pair::target() const { return _target; }
+const WordToken& Pair::source() const { return _source; }
+const WordToken& Pair::target() const { return _target; }
+
+///////////////////////////////// Sequence /////////////////////////////////////
 
 void Sequence::set_score(const float& s) {
     _score = s;
@@ -77,11 +80,15 @@ const float& Sequence::get_score() const {
     return _score;
 }
 
+Sequence::Sequence(const Dictionary& dict) {
+    _length = 0;
+    _dict = &dict;
+}
+
 Sequence::Sequence(const Dictionary& dict, const Pair& p) {
     _length = 1;
     _dict = &dict;
     this->add(p);
-    _slot = _back_slot = p.slot();
 }
 
 Sequence::Sequence(const Dictionary& dict, const Pair& p1, const Pair& p2) {
@@ -90,13 +97,29 @@ Sequence::Sequence(const Dictionary& dict, const Pair& p1, const Pair& p2) {
     this->add(p1);
     this->add(p2);
     _slot = p1.slot();
-    _back_slot = p2.slot();
 }
 
 void Sequence::add(const Pair& p) {
+    if (_length == 0)
+        _slot = p.slot();
     _list.push_back(p);
     _back_slot = p.slot();
     ++_length;
+}
+
+bool Sequence::add_if_close(const Pair& p) {
+    if (_length == 0) {
+        add(p);
+        return true;
+    }
+
+    if (this->last_pair().targets_close(p)
+     && !this->has_target(p)) {
+        add(p);
+        return true;
+    }
+
+    return false;
 }
 
 void Sequence::merge(const Sequence& that) {
@@ -107,6 +130,16 @@ void Sequence::merge(const Sequence& that) {
     _length += that.length();
 }
 
+const Sequence& Sequence::reverse() {
+    _dict = DictionaryFactory::get_instance()
+            ->get_dictionary(_dict->get_f()->filename(),
+                             _dict->get_e()->filename());
+    for (Pair& pair : _list)
+        pair.reverse();
+
+    return *this;
+}
+
 int Sequence::slot() const
     { return _slot; }
     //{ return _list.front().slot(); }
@@ -115,6 +148,17 @@ int Sequence::back_slot() const
     { return _back_slot; }
     //{ return _list.back().slot(); }
 
+bool Sequence::operator==(const Sequence& that) const {
+    auto this_it = this->begin(),
+         that_it = that.begin();
+    while (this_it != this->end() && that_it != that.end()) {
+        if (*this_it != *that_it)
+            return false;
+        ++this_it;
+        ++that_it;
+    }
+    return true;
+}
 bool Sequence::has_target(int target_pos) {
     for (Sequence::iterator pp = _list.begin();
             pp != _list.end(); ++pp)
@@ -123,7 +167,7 @@ bool Sequence::has_target(int target_pos) {
     return false;
 }
 
-bool Sequence::has_target( const Pair& other ) {
+bool Sequence::has_target(const Pair& other) {
     return this->has_target(other.target_slot());
 }
 

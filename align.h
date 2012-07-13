@@ -5,11 +5,11 @@
 #include<cstdlib>
 
 #include<list>
-#include<map>
-#include<vector>
+#include<utility>
 
-#include"text.h"
 #include"params.h"
+#include"text.h"
+#include"dictionary.h"
 #include"containers.h"
 #include"scorers.h"
 
@@ -17,62 +17,71 @@ class Candidates {
     friend class SequenceContainer;
     public:
         explicit Candidates(const Dictionary&);
-        ~Candidates();
 
         void collect();
         //< collect all translation candidates
 
-        // XXX this should probably be handled
-        // by typedef'ing an iterator like in the
-        // Sequence and SequenceContainer classes
-        Translations::const_iterator begin() const;
-        Translations::const_iterator end() const;
+        typedef std::list<std::pair<WordToken, std::list<WordToken>>>::iterator
+            iterator;
+
+        inline Candidates::iterator begin() {
+            return _translations.begin();
+        };
+        inline Candidates::iterator end() {
+            return _translations.end();
+        };
 
     protected:
-        std::shared_ptr<PairFactory> pair_factory;
-
-        Translations _translations;
+        std::list<std::pair<WordToken, std::list<WordToken>>> _translations;
         const Dictionary* _dict;
 };
 
-// this should use enum class for strongly typed enums
-// however, it appears to be not implemented yet by gcc,
-// which kind of sucks
-enum BreakAfterPhase {
-    BreakAfterInitial,
-    BreakAfterExpand,
-    BreakAfterMerge,
-    DontBreak
+// turns out I just misunderstood how strongly typed enums are
+// supposed to be used, so let's all forget I ever blamed gcc
+enum class BreakAfterPhase {
+    Initial,
+    Expand,
+    Merge,
+    Never
 };
 
 class SequenceContainer {
     public:
-        explicit SequenceContainer(const Candidates&);
-        ~SequenceContainer();
+        explicit SequenceContainer(Candidates*);
 
-        void make(const BreakAfterPhase = DontBreak);
-
-        typedef std::list<Sequence>::const_iterator iterator;
-
-        SequenceContainer::iterator begin() const;
-        SequenceContainer::iterator end() const;
-
-    private:
-        std::shared_ptr<PairFactory> pair_factory;
-        std::list<Sequence> _list;
-        Translations _translations;
-
-        const Dictionary* _dict;
-
-        ScoringMethods scoring_methods;
-        //< contains all scoring methods as functors
-
+        void make(const BreakAfterPhase = BreakAfterPhase::Never);
+        // TODO
+        // find another way to ensure the correct sequence
+        // of steps. the latter part of the sequence can be
+        // varied, and the reverse sequences step occurs before
+        // the merge step and should take place outside of the
+        // SC
         void initial_sequences();
         //< construct initial bigrams of pairs
         void expand_sequences();
         //< expand the sequences at tail end
         void merge_sequences();
         void collect_scores();
+        void get_topranking();
+
+        typedef std::list<Sequence>::const_iterator iterator;
+
+        const SequenceContainer& reverse();
+        const SequenceContainer& merge(const SequenceContainer&);
+
+        SequenceContainer::iterator begin() const;
+        SequenceContainer::iterator end() const;
+
+    private:
+        //const SequenceContainer& operator=(const SequenceContainer&);
+        std::list<Sequence> _list;
+
+        Params* params;
+        Candidates* _candidates;
+        const Dictionary* _dict;
+
+        ScoringMethods scoring_methods;
+        //< contains all scoring methods as functors
 };
 
 

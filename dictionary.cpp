@@ -1,117 +1,197 @@
 // Copyright 2012 Florian Petran
-#include"text.h"
-
-#include"containers.h"
+#include"dictionary.h"
 
 #include<string>
-#include<vector>
+#include<stdexcept>
+#include<utility>
+#include<map>
+#include<list>
+
+#include"containers.h"
+#include"params.h"
 
 using std::ifstream;
 using std::string;
+using std::pair;
+using std::list;
+using std::map;
+using std::runtime_error;
 
-Dictionary::Dictionary(const char* e, const char* f) {
-    open(e, f);
+////////////////////////// DictionaryFactory //////////////////////////////////
+
+DictionaryFactory* DictionaryFactory::_instance = new DictionaryFactory();
+
+DictionaryFactory* DictionaryFactory::get_instance() {
+    return _instance;
+}
+
+DictionaryFactory::~DictionaryFactory() {
+    for (pair<const pair<string, string>, Dictionary*>& dict_entry
+            : dictionaries)
+        delete dict_entry.second;
+    for (pair<const string, Text*>& text_entry : texts)
+        delete text_entry.second;
+}
+
+DictionaryFactory::DictionaryFactory()
+    : index_filename("") { }
+
+namespace {
+    inline string basename(const string& str) {
+        return(str.substr(str.rfind("/") + 1, str.length() - 1));
+    }
+}
+
+const Dictionary* DictionaryFactory::get_dictionary(const string& e,
+                                                    const string& f) {
+    pair<string, string> transl_pair = make_pair(basename(e),
+                                                 basename(f));
+
+    map<pair<string, string>, Dictionary*>::iterator
+        dict_entry = dictionaries.find(transl_pair);
+
+    if (dict_entry == dictionaries.end()) {
+        if (index_filename == "")
+            index_filename  = Params::get()->dict_base() + "/INDEX";
+        dictionaries[transl_pair] = new Dictionary();
+        dictionaries[transl_pair]->set_texts(get_text(e), get_text(f));
+        dictionaries[transl_pair]->open(locate_dictionary_file(basename(e),
+                                                               basename(f)));
+        return dictionaries[transl_pair];
+    }
+
+    return dict_entry->second;
+}
+
+Text* DictionaryFactory::get_text(const string& fname) {
+    map<string, Text*>::iterator text_entry = texts.find(fname);
+
+    if (text_entry == texts.end()) {
+        texts[fname] = new Text(fname);
+        return texts[fname];
+    }
+
+    return text_entry->second;
 }
 
 
-void Dictionary::get_dict_fname(const string& e_name, const string& f_name) {
-    string line = Params::get()->dict_base();
-    line += "/INDEX";
-
-    char c_line[255];
+string DictionaryFactory::locate_dictionary_file(const string& e_name,
+                                                 const string& f_name) {
     ifstream index_file;
-    index_file.open(line);
+    index_file.open(index_filename);
 
     if (!index_file.is_open())
-        throw std::runtime_error(std::string("Index file not found: ") + line);
+        throw runtime_error("Index file not found!");
 
+    char c_line[255];
+    string line;
     while (!index_file.eof()) {
         index_file.getline(c_line, 255);
         line = c_line;
 
-        int e_pos = line.find(e_name);
-        int f_pos = line.find(f_name);
+        size_t e_pos = line.find(e_name);
+        size_t f_pos = line.find(f_name);
 
-        if (e_pos != 0 && f_pos != 0 && e_pos < f_pos)
+        if (e_pos != string::npos && f_pos != string::npos && e_pos < f_pos)
             break;
     }
 
     index_file.clear();
     index_file.close();
 
-    _dict_fname = Params::get()->dict_base();
-    _dict_fname += line.substr(0, line.find(":"));
+    if (line == "")
+        throw runtime_error(static_cast<string>("Dictionary entry for ")
+                          + e_name
+                          + " -> "
+                          + f_name
+                          + " not found in index file!");
+
+    string filename = Params::get()->dict_base()
+                    + line.substr(0, line.find(":"));
+    return filename;
 }
 
-namespace {
-    inline string basename(const std::string& str) {
-        return(str.substr(str.rfind("/") + 1, str.length() - 1));
-    }
+/////////////////////////// Dictionary ////////////////////////////////////////
+
+Dictionary::Dictionary() {
+    factory = DictionaryFactory::get_instance();
 }
 
-void Dictionary::open(const char* e_name, const char* f_name) {
-    get_dict_fname(basename(e_name), basename(f_name));
+Dictionary::Dictionary(const string& fname) {
+    factory = DictionaryFactory::get_instance();
+    open(fname);
+}
 
-    _e = new Text(e_name);
-    _f = new Text(f_name);
+void Dictionary::open(const string& fname) {
+    ifstream dict_file;
+    dict_file.open(fname);
 
+    if (!dict_file.is_open())
+        throw runtime_error(
+                static_cast<string>("Dictionary file not found: ") + fname);
+
+    read(&dict_file);
+
+    dict_file.clear();
+    dict_file.close();
+}
+
+void Dictionary::read(ifstream* file) {
     string_impl line;
     char c_line[255];
 
-    ifstream dict_file;
-    dict_file.open(_dict_fname);
-
-    if (!dict_file.is_open())
-        throw std::runtime_error(
-                std::string("Dictionary file not found: ") + _dict_fname);
-
-    while (!dict_file.eof()) {
-        dict_file.getline(c_line, 255);
-
+    while (!file->eof()) {
+        file->getline(c_line, 255);
         line = c_line;
+
+        // comment line in dictionaries are supposed to start
+        // with ###
+        if (string_find(line, "###") == 0)
+            continue;
 
         string_size div = string_find(line, " = ");
         if (div == string_npos)
             continue;
 
         string_impl sword, tword;
-
         extract(line, 0, div, &sword);
         lower_case(&sword);
-
         extract(line, div + 3, line.length(), &tword);
         lower_case(&tword);
 
-        _storage[ _e->_wordlist[sword] ].push_back( _f->_wordlist[tword] );
+        // i'm a bit unsure what needs to be done if a
+        // dictionary entry doesn't occur in the texts, but
+        // probably it's safe to assume we don't need a
+        // dictionary entry for it then.
+        if (_f->_types.find(tword) == _f->_types.end()
+         || _e->_types.find(sword) == _e->_types.end())
+            continue;
+        WordType* ft = _f->_types.at(tword);
+        WordType* et = _e->_types.at(sword);
+
+        _storage[*et].push_back(*ft);
     }
-
-
-    dict_file.close();
 }
 
-Dictionary::~Dictionary() {
-    delete _e;
-    delete _f;
+const list<WordType>& Dictionary::lookup(const WordToken& lemma) const {
+    if (&lemma.get_text() != _e)
+        throw runtime_error("Text of word to look up doesn't match e");
+
+    // empty list - does it need to be kept separately? will it cause
+    // an exception or memory corruption to look up a word that doesn't exit?
+    //if (!this->has(lemma))
+        //return XXX
+
+    return _storage.find(lemma.get_type())->second;
+    // yes, this looks stupid. but operator[] is a potentially modifying
+    // procedure, as it may insert a new element into the map, so it can't
+    // be used with const
 }
 
-TranslationsEntry* Dictionary::lookup(const Word& lemma) const {
-    if (lemma._text != _e)
-        throw std::runtime_error("Text of word to look up doesn't match e");
 
-    TranslationsEntry *occurrences = new TranslationsEntry;
+bool Dictionary::has(const WordToken& lemma) const {
+    if (&lemma.get_text() != _e)
+        throw runtime_error("Text of word to look up doesn't match e");
 
-    for( std::list<Word>::const_iterator tr = _storage.at(lemma).begin();
-            tr != _storage.at(lemma).end(); ++tr )
-        for( TranslationsEntry::const_iterator ii = _f->index(*tr).begin();
-                ii != _f->index(*tr).end(); ++ii )
-            occurrences->push_back( *ii );
-
-    return occurrences;
-}
-
-bool Dictionary::has(const Word& lemma) const {
-    if (lemma._text != _e)
-        throw std::runtime_error("Text of word to look up doesn't match e");
-
-    return _storage.count(lemma) >= 1;
+    return _storage.count(lemma.get_type()) >= 1;
 }

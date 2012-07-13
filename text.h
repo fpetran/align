@@ -1,165 +1,158 @@
 // Copyright 2012 Florian Petran
+// representations for texts, and word types and tokens
 #ifndef ALIGN_TEXT_HH
 #define ALIGN_TEXT_HH
 
 #include<string>
 #include<fstream>
 #include<list>
+#include<vector>
 #include<map>
-#include<algorithm>
-#include<memory>
-#include<stdexcept>
 
-#include"align_config.h"
 #include"string_impl.h"
-#include"params.h"
 
 class Text;
 
 /**
- * Encapsulates a Word in a light weight class, so that
- * client code doesn't need to take care of memory management.
- *
- * The underlying string is saved as a pointer to a string. Word
- * equality is determined by two Word objects pointing to the same
- * string.
- *
+ * base class for tokens/types
+ *  access text ptr of a word
  **/
 class Word {
-    friend class Dictionary;
     public:
-        Word(Text*, std::shared_ptr<string_impl>);
-        //< This should be the standard ctor.
-
-        Word() {}
-        //< Alternatively, empty ctor, but it needs to be
-        //< ensured that open() is called afterwards.
-
-        // big three:
-        Word(const Word&);
-        ~Word();
-        Word& operator=(const Word&);
-
-        // gt/lt operators are needed to insert a word in a map
-        // it's not important what criteria they use for ordering
-        // though, as Word just encapsulates a smart_ptr
-        // accordingly, we're just comparing ptr values here.
-        inline bool operator<(const Word& that) const {
-            return this->_string < that._string;
-        }
-        bool operator==(const Word&) const;
-
-        const string_impl& get_str() const;
-        //< Return the String associated with the Word.
-
-        int frequency();
-        //< Return the frequency of a Word in its Text.
-
-        const std::string& filename() const;
-
-        const Text* get_text() const { return _text; }
+        const Text& get_text() const;
 
     protected:
+        explicit Word(const Text*);
         const Text* _text;
 
     private:
-        std::shared_ptr<string_impl> _string;
+        Word() {}
 };
 
-
-
-typedef std::map<string_impl, Word> Wordlist;
-typedef std::list<int> TranslationsEntry;
-typedef std::map<int, TranslationsEntry*> Translations;
-
+class WordType;
 
 /**
- * Represents a Dictionary, that is specific to two texts. Note
- * that the Dictionary is directional - Dictionary( e, f ) is not
- * the same as Dictionary( f, e )
+ * a specific word at a specific position in the text
  *
- * The filename for the dictionary is first determined using an
- * index file, then that file is opened and a word list constructed
- * from it for each f and e texts. Also note that the Text objects
- * need to be pointers since they are mutually dependent on Dictionary.
- *
- * The actual translation dictionary is stored as a map of vectors. Keys
- * of that map are the e Words, and the vector value stores all f Words.
- *
- * Supposedly, the lookup method can be used to look up a word.
- *
+ * access position in text
+ * access string representation
  **/
-class Dictionary {
+class WordToken : public Word {
+    friend class Text;
+    friend class Pair;
     public:
-        Dictionary(const char*, const char*);
-        Dictionary() {}
-        ~Dictionary();
+        inline const string_impl& get_str() const {
+            return *_string_realization;
+        }
+        inline int position() const {
+            return _position;
+        }
+        bool operator==(const WordToken&) const;
+        inline bool operator!=(const WordToken& other) const {
+            return !(*this == other);
+        }
+        inline bool operator<(const WordToken& other) const {
+            return this->_string_realization < other._string_realization;
+        }
+        inline const WordType& get_type() const {
+            return *_type;
+        }
 
-        void open(const char*, const char*);
-        //< open a dictionary file over the two file names provided
-
-        TranslationsEntry* lookup(const Word&) const;
-        //< return all indexes in f where there are translations for w
-        //< currently, this throws if the word isn't stored
-
-        bool has(const Word&) const;
-        //< check if the dictionary has an entry for word
-
-        inline Text* get_e() const { return _e; }
-        inline Text* get_f() const { return _f; }
+    protected:
+        WordToken(const Text*, const string_impl*, int, const WordType*);
+        WordToken();
 
     private:
-        void get_dict_fname(const std::string&, const std::string&);
-        //< read the dict index file and get the dictionary file from that
+        int _position;
+        const WordType* _type;
+        const string_impl* _string_realization;
+};
 
-        Text *_e, *_f;
-        std::string _dict_fname;
-        std::map<Word, std::list<Word> > _storage;
-
-        const Dictionary& operator=(const Dictionary&) { return *this; }
-        Dictionary(const Dictionary&) {}
+/**
+ * a WordType
+ *  access frequency of its tokens
+ *  access a list of the token realizations
+ **/
+class WordType : public Word {
+    friend class Text;
+    public:
+        inline const std::list<WordToken>& get_tokens() const {
+            return _tokens;
+        }
+        inline int frequency() const {
+            return _frequency;
+        }
+        inline bool operator<(const WordType& other) const {
+            // this may be a problem. what if a type doesn't have a
+            // token yet? XXX
+            // the reason for the comparison operator is inserting
+            // in maps as keys, which currently only happens in
+            // dictionaries, so for now, it should be okay. needs
+            // revising though.
+            return this->_tokens.front() < other._tokens.front();
+        }
+        bool operator==(const WordType&) const;
+        //< tests if any of the associated tokens' string
+        //< representations match
+    protected:
+        explicit WordType(const Text*);
+        const WordType& add_token(const WordToken&);
+    private:
+        std::list<WordToken> _tokens;
+        int _frequency;
 };
 
 /**
  * Represents a Text as a container.
+ *
+ * owns WordTokens string ptrs
+ *
  * Words are stored in a vector of words, at the
  * same time there is a map that stores the indexes of each word.
  *
  **/
 class Text {
     friend class Dictionary;
-    friend class Word;
+    friend class DictionaryFactory;
     public:
-        explicit Text(const char*);
-
-        const Word& operator[](int) const;  // NOLINT[readability/function]
+        const WordToken& operator[](int) const;// NOLINT[readability/function]
         //< lookup of a word by index
-        const Word& at(int) const;          // NOLINT[readability/function]
+        const WordToken& at(int) const;        // NOLINT[readability/function]
         //< range checked lookup
 
-        inline int length() const { return _length; }
-
-        inline const std::list<int>& index(const Word& w) const {
-            return _indexes.at(w);
+        inline int length() const {
+            return _length;
         }
-        inline const int frequency(const Word& w) const {
-            return _indexes.at(w).size();
+
+        inline const std::string& filename() const {
+            return _fname;
+        }
+
+        typedef std::vector<WordToken>::const_iterator iterator;
+        inline Text::iterator begin() const {
+            return _words.begin();
+        }
+        inline Text::iterator end() const {
+            return _words.end();
         }
 
     protected:
-        std::string _fname;
-        Wordlist _wordlist;
+        explicit Text(const std::string&);
+        ~Text();
+
+        std::map<string_impl, WordType*> _types;
 
     private:
-        void add_to_wordlist(const string_impl&);
-
         Text();
-        //< every time you construct an empty text, god kills a kitten
-        Text(const Text&) {}
-        const Text& operator=(const Text&) { return *this; }
+        Text(const Text&);
+        const Text& operator=(const Text&);
 
-        std::map<Word, std::list<int> > _indexes;
-        std::vector<Word> _words;
+        void open(const std::string&);
+
+        std::string _fname;
+        std::vector<WordToken> _words;
+        std::map<string_impl, string_impl*> string_ptrs;
+        //< these are copied between tokens, but owned by Text
         int _length;
 };
 

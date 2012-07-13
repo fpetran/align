@@ -1,102 +1,126 @@
 // Copyright 2012 Florian Petran
 #include"text.h"
+
+#include<cctype>
+
 #include<string>
+#include<fstream>
+#include<stdexcept>
+#include<utility>
 
-Word::Word(Text* text, std::shared_ptr<string_impl> str) {
+#include"string_impl.h"
+
+using std::string;
+using std::ifstream;
+using std::pair;
+using std::out_of_range;
+using std::runtime_error;
+
+//////////////////////////////// base Word ////////////////////////////////////
+
+Word::Word(const Text* text) {
     _text = text;
-    _string = str;
 }
 
-Word::Word(const Word& that) {
-    _text = that._text;
-    _string = that._string;
+const Text& Word::get_text() const {
+    return *_text;
 }
 
-Word& Word::operator=(const Word& that) {
-    _text = that._text;
-    _string = that._string;
+/////////////////////////////// WordToken /////////////////////////////////////
+
+WordToken::WordToken(const Text* text, const string_impl* s,
+                     const int pos, const WordType* type)
+    : Word(text), _position(pos)  {
+    _string_realization = s;
+    _type = type;
+}
+
+bool WordToken::operator==(const WordToken& other) const {
+    return
+           this->_type == other._type
+        && this->_position == other._position;
+}
+
+/////////////////////////////// WordType //////////////////////////////////////
+WordType::WordType(const Text* text)
+    : Word(text), _frequency(0) {}
+
+const WordType& WordType::add_token(const WordToken& token) {
+    _tokens.push_back(token);
+    ++_frequency;
     return *this;
 }
 
-const std::string& Word::filename() const {
-    return _text->_fname;
+bool WordType::operator==(const WordType& other) const {
+    for (const WordToken& this_tok : this->_tokens)
+        for (const WordToken& other_tok : other._tokens)
+            if (this_tok.get_str() == other_tok.get_str())
+                return true;
+    return false;
 }
 
-Word::~Word() {
-    _string.reset();
+////////////////////////////////// Text ///////////////////////////////////////
+const WordToken& Text::operator[](int index) const {
+    return _words[index];
 }
 
-bool Word::operator==(const Word& other) const {
-    return this->_string == other._string;
+const WordToken& Text::at(int index) const {
+    if (index >= _length || index < 0)
+        throw out_of_range("Text lookup out of range");
+    return this->operator[](index);
 }
 
-int Word::frequency() {
-    return _text->frequency(*this);
+Text::Text(const string& fname) {
+    open(fname);
 }
 
-const Word& Text::operator[](int index) const {
-    return _words[ index ];
+Text::~Text() {
+    for (pair<const string_impl, string_impl*>& sp : string_ptrs)
+        delete sp.second;
+
+    for (pair<const string_impl, WordType*>& wt : _types)
+        delete wt.second;
 }
 
-const Word& Text::at(int index) const {
-    if (index >= _length)
-        throw std::out_of_range("Text lookup out of range");
-    return _words[ index ];
-}
-
-const string_impl& Word::get_str() const {
-    return *_string;
-}
-
-Text::Text(const char* fname) {
+void Text::open(const string& fname) {
     _fname = fname;
-    std::ifstream file;
+    ifstream file;
     _length = 0;
 
     file.open(_fname);
     if (!file.is_open())
-        throw std::runtime_error(std::string("Text file not found: ") + fname);
+        throw runtime_error(string("Text file not found: ") + fname);
 
     char c_line[256];
-
     while (!file.eof()) {
         file.getline(c_line, 256);
 
+        /* v-- this doesn't seem to work
         bool is_alnum = false;
-
-        for (int i = 0; i < 256; ++i) {
-            if (c_line[i] == '\0')
-                break;
-            is_alnum = is_alnum || isalpha(c_line[i]);
-        }
+        for (char* cc = c_line; *cc != '\0'; ++cc)
+            is_alnum = is_alnum || isalpha(*cc);
+        if (!is_alnum)
+            continue;
+        */
 
         string_impl line = c_line;
         lower_case(&line);
 
-        if (is_alnum) {
-            add_to_wordlist(line);
-            _words.push_back(_wordlist.at(line));
-        } else {
-            _words.push_back(
-                    Word(this,
-                        std::shared_ptr<string_impl>(new string_impl(line))));
-        }
-
-
-        if (_indexes.find(_words.back()) == _indexes.end())
-            _indexes[_words.back()] = std::list<int>();
-        _indexes[_words.back()].push_back(_length);
+        if (_types.find(line) == _types.end())
+            _types[line] = new WordType(this);
+        if (string_ptrs.find(line) == string_ptrs.end())
+            string_ptrs[line] = new string_impl(line);
+        WordToken tok = WordToken(this,
+                                  string_ptrs[line],
+                                  _length,
+                                  _types[line]);
+        _types[line]->add_token(tok);
+        _words.push_back(tok);
 
         ++_length;
     }
 
     file.clear();
     file.close();
-}
-
-void Text::add_to_wordlist(const string_impl& str) {
-    if (_wordlist.find(str) == _wordlist.end())
-        _wordlist[str] =
-            Word(this, std::shared_ptr<string_impl>(new string_impl(str)));
 }
 

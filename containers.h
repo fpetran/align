@@ -7,44 +7,34 @@
 #include<map>
 
 #include"text.h"
+#include"dictionary.h"
 #include"params.h"
 
-class PairFactory;
-
 class Pair {
-    friend class PairFactory;
     public:
         bool targets_close(const Pair&) const;
         bool both_close(const Pair&) const;
-        const Word& source() const;
-        const Word& target() const;
+
+        bool operator==(const Pair&) const;
+        inline bool operator!=(const Pair& that) const {
+            return !(*this == that);
+        };
+
+        const Pair& reverse();
+
+        const WordToken& source() const;
+        const WordToken& target() const;
         int slot() const;
         int target_slot() const;
-    protected:
-        Pair(const Word&, int, const Word&, int);
-    private:
-        Word _source, _target;
-        int _fi, _ei;
-};
 
-/**
- * Produce alignment pairs over two texts.
- *
- * ok, so it's not strictly a factory in the sense of
- * GoF - sue me. it exists to simplify the ctor calls for
- * Pair with params that are common to all Pairs.
- *
- **/
-class PairFactory {
-    public:
-        explicit PairFactory(const Dictionary&);
-        Pair make_pair(int, int);
+        Pair(const WordToken&, const WordToken&);
     private:
-        const Dictionary* _dict;
+        WordToken _source, _target;
 };
 
 class Sequence {
     public:
+        explicit Sequence(const Dictionary&);
         Sequence(const Dictionary&, const Pair&);
         //< construct an initial Sequence over two texts from one pair
         Sequence(const Dictionary&, const Pair&, const Pair&);
@@ -52,8 +42,13 @@ class Sequence {
 
         void add(const Pair&);
         //< add a pair to the sequence
+        bool add_if_close(const Pair&);
+        //< add a pair if its target is close to our last target,
+        //< return whether it was added or not
         void merge(const Sequence&);
         //< merge another sequence to this
+        const Sequence& reverse();
+        //< reverse e and f
 
         int slot() const;
         //< starting slot of the sequence
@@ -66,6 +61,7 @@ class Sequence {
         const float& get_score() const;
 
 
+        bool operator==(const Sequence&) const;
         bool has_target(int);
         bool has_target(const Pair&);
         //< checks if a target index is already in
@@ -88,9 +84,11 @@ class Sequence {
         const Dictionary* _dict;
 
         float _score;
-        unsigned int _slot, _back_slot;
+        int _slot, _back_slot;
 
-        mutable unsigned int _length;
+        // mutable isn't threadsafe? research this and possibly fix
+        // XXX
+        mutable int _length;
 };
 
 

@@ -1,17 +1,22 @@
 // Copyright 2012 Florian Petran
 #include<list>
 #include<string>
+#include<vector>
 
 #include<gtest/gtest.h>
 
 #include"align.h"
-#include"params.h"
+#include"align_config.h"
 #include"string_impl.h"
+
 
 class AlignTest_Fixture : public testing::Test {
     protected:
         virtual void SetUp() {
-            Params::get()->set_dict_base( ALIGN_DICT_BASE );
+            Params* params = Params::get();
+            params->set_dict_base(ALIGN_DICT_BASE);
+            DictionaryFactory* df = DictionaryFactory::get_instance();
+
             std::string e =
                 static_cast<std::string>(ALIGN_FILE_BASE);
             std::string f = e;
@@ -19,31 +24,29 @@ class AlignTest_Fixture : public testing::Test {
             e += "/test_e.txt";
             f += "/test_f.txt";
 
-            _dict.open( e.c_str(), f.c_str() );
-            //_f = _dict.get_f();
-            //_e = _dict.get_e();
+            _dict = df->get_dictionary(e, f);
 
+            c = new Candidates(*_dict);
+            c->collect();
+            sc = new SequenceContainer(c);
 
-            // fill expected translations collection
-            fill_entry( &tr_exp, 8, 19, 29, 39 );
-            fill_entry( &tr_exp, 9, 20, 34, 38 );
-            fill_entry( &tr_exp, 10, 21, 9, 13 );
-            fill_entry( &tr_exp, 12, 22, 26, 27 );
-            fill_entry( &tr_exp, 13, 23, 27, 34 );
         }
         virtual void TearDown() {
+            delete c;
+            delete sc;
         }
 
-        Dictionary _dict;
-        Translations tr_exp;
-        void fill_entry( Translations* tr,
-                int src,
-                int one, int two, int three ) {
-            TranslationsEntry ex_entry;
-            ex_entry.push_back( one );
-            ex_entry.push_back( two );
-            ex_entry.push_back( three );
-            tr->insert( make_pair( src, new TranslationsEntry(ex_entry) ) );
+        // data members
+        const Dictionary* _dict;
+        Candidates* c;
+        SequenceContainer* sc;
+
+        void read_seq_to_vec(std::vector<int>* vec) {
+            for (const Sequence& seq : *sc)
+                for (const Pair& pair : seq) {
+                    vec->push_back(pair.source().position());
+                    vec->push_back(pair.target().position());
+                }
         }
 };
 
@@ -51,38 +54,34 @@ class AlignTest : public AlignTest_Fixture {
 };
 
 namespace {
-    void printWord(const Word& w) {
+    void printWord(const WordToken& w) {
         printString(w.get_str());
     }
 }
 
 TEST_F(AlignTest, CandidatesTest) {
-    Candidates c(_dict);
-    c.collect();
+    std::map<int,std::list<int>> tr_exp;
+    tr_exp[8] = { 19, 29, 39 };
+    tr_exp[9] = { 20, 34, 38 };
+    tr_exp[10] = { 21, 9, 13 };
+    tr_exp[12] = { 22, 26, 27 };
+    tr_exp[13] = { 23, 27, 34 };
 
-    Translations::const_iterator act = c.begin(), exp = tr_exp.begin();
+    std::map<int,std::list<int>> tr_actual;
 
-    while( act != c.end() && exp != tr_exp.end() ) {
-        EXPECT_EQ( act->first, exp->first );
-        EXPECT_EQ( *(act->second), *(exp->second) );
-        ++act; ++exp;
-    }
+    for (Candidates::iterator act = c->begin(); act != c->end(); ++act)
+        for (std::list<WordToken>::iterator act_tr = act->second.begin();
+                act_tr != act->second.end(); ++act_tr)
+            tr_actual[act->first.position()].push_back(act_tr->position());
 
+    EXPECT_EQ(tr_exp.size(), tr_actual.size());
+    EXPECT_EQ(tr_exp, tr_actual);
 }
 
 TEST_F(AlignTest, SequenceTestInital) {
-    Candidates c(_dict);
-    c.collect();
+    sc->make(BreakAfterPhase::Initial);
 
-    SequenceContainer sc(c);
-    sc.make(BreakAfterInitial);
-
-    // it's possibly a huge hack to read all values into
-    // an array, but otoh i don't want to implement a getter
-    // for internal data structures just for the unit test
-    // expected values
-    int expected_sequence[12] =
-    {
+    std::vector<int> expected_sequence {
         8, 19,
         9, 20,
         //---
@@ -93,32 +92,18 @@ TEST_F(AlignTest, SequenceTestInital) {
         13, 27
     };
 
-
     // put actual indexes values into array too
-    int actual_sequence[12];
-    int i = 0;
-    for (SequenceContainer::iterator seq = sc.begin();
-            seq != sc.end(); ++seq)
-        for (Sequence::iterator pair = seq->begin();
-                pair != seq->end(); ++pair) {
-            EXPECT_TRUE( i < 12 );
-            actual_sequence[i] = pair->slot();
-            actual_sequence[i+1] = pair->target_slot();
-            i += 2;
-        }
+    std::vector<int> actual_sequence;
+    read_seq_to_vec(&actual_sequence);
 
-    for (int ii = 0; ii < 12; ++ii)
-        EXPECT_EQ( expected_sequence[ii], actual_sequence[ii] );
+    EXPECT_EQ(expected_sequence.size(), actual_sequence.size());
+    EXPECT_EQ(expected_sequence, actual_sequence);
 }
 
 TEST_F(AlignTest, SequenceTestExpand) {
-    Candidates c(_dict);
-    c.collect();
+    sc->make(BreakAfterPhase::Expand);
 
-    SequenceContainer sc(c);
-    sc.make(BreakAfterExpand);
-
-    int expected_sequence[14] = {
+    std::vector<int> expected_sequence {
         8, 19,
         9, 20,
         //--
@@ -130,32 +115,17 @@ TEST_F(AlignTest, SequenceTestExpand) {
         13, 27
     };
 
-    int actual_sequence[14];
-    int i = 0;
+    std::vector<int> actual_sequence;
+    read_seq_to_vec(&actual_sequence);
 
-    for (SequenceContainer::iterator seq = sc.begin();
-            seq != sc.end(); ++seq)
-        for (Sequence::iterator pair = seq->begin();
-                pair != seq->end(); ++pair) {
-            EXPECT_TRUE( i < 14 );
-            actual_sequence[i] = pair->slot();
-            actual_sequence[i+1] = pair->target_slot();
-            i += 2;
-        }
-
-    for (int ii = 0; ii < 13; ++ii)
-        EXPECT_EQ( expected_sequence[ii], actual_sequence[ii] );
-
+    EXPECT_EQ(expected_sequence.size(), actual_sequence.size());
+    EXPECT_EQ(expected_sequence, actual_sequence);
 }
 
 TEST_F(AlignTest, SequenceTestMerge) {
-    Candidates c(_dict);
-    c.collect();
+    sc->make(BreakAfterPhase::Merge);
 
-    SequenceContainer sc(c);
-    sc.make(BreakAfterMerge);
-
-    int expected_one[10] = {
+    std::vector<int> expected_one {
         8, 19,
         9, 20,
         10, 21,
@@ -163,7 +133,7 @@ TEST_F(AlignTest, SequenceTestMerge) {
         13, 23
     };
 
-    int expected_two[4] = {
+    std::vector<int> expected_two {
         12, 26,
         13, 27
     };
@@ -172,37 +142,44 @@ TEST_F(AlignTest, SequenceTestMerge) {
     // lots of hardcoded assumptions here. we should
     // have two sequences in sc with the content as
     // above
-    SequenceContainer::iterator seq = sc.begin();
-    int actual_one[10];
-    int i = 0;
+    SequenceContainer::iterator seq = sc->begin();
+    std::vector<int> actual_one;
 
-    for (Sequence::iterator pair = seq->begin();
-            pair != seq->end(); ++pair) {
-        EXPECT_TRUE( i < 10 );
-        actual_one[i] = pair->slot();
-        actual_one[i+1] = pair->target_slot();
-        i += 2;
+    for (const Pair& pair : *seq) {
+        actual_one.push_back(pair.slot());
+        actual_one.push_back(pair.target_slot());
     }
     ++seq;
 
-    int actual_two[4];
-    i = 0;
-    for (Sequence::iterator pair = seq->begin();
-            pair != seq->end(); ++pair) {
-        EXPECT_TRUE( i < 4 );
-        actual_two[i] = pair->slot();
-        actual_two[i+1] = pair->target_slot();
-        i += 2;
+    std::vector<int> actual_two;
+    for (const Pair& pair : *seq) {
+        actual_two.push_back(pair.slot());
+        actual_two.push_back(pair.target_slot());
     }
     ++seq;
 
-    EXPECT_TRUE( seq == sc.end() );
+    EXPECT_EQ(seq, sc->end());
 
-    for (int ii = 0; ii < 9; ++ii)
-        EXPECT_EQ( expected_one[ii], actual_one[ii] );
-    for (int ii = 0; ii < 3; ++ii)
-        EXPECT_EQ( expected_two[ii], actual_two[ii] );
+    EXPECT_EQ(expected_one.size(), actual_one.size());
+    EXPECT_EQ(expected_one, actual_one);
+    EXPECT_EQ(expected_two.size(), actual_two.size());
+    EXPECT_EQ(expected_two, actual_two);
+}
 
+TEST_F(AlignTest, TestAll) {
+    sc->make();
+
+    std::vector<int> expected {
+        8, 19,
+        9, 20,
+        10, 21,
+        12, 22,
+        13, 23
+    };
+    std::vector<int> actual;
+    read_seq_to_vec(&actual);
+    EXPECT_EQ(expected.size(), actual.size());
+    EXPECT_EQ(expected, actual);
 }
 
 int main(int argc, char** argv) {
