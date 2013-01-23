@@ -19,8 +19,10 @@
 
 #ifdef ALIGN_HAS_UCI_STRING
 #include<unicode/unistr.h>
+#include<unicode/uchar.h>
 
 typedef UnicodeString string_impl;
+typedef UChar32 char_impl;
 typedef int string_size;
 
 inline void lower_case(string_impl* str)
@@ -31,6 +33,10 @@ inline void extract(const string_impl& str, int from, int to, string_impl* out)
 inline string_size string_find(const string_impl& me, const char* you)
     { return me.indexOf(you); }
 
+inline bool check_if_alpha(char_impl c) {
+    return u_isalpha(c);
+}
+
 // printString for UCI needs a local char_ptr, so it's not inlined
 void printString(const string_impl&);
 
@@ -40,6 +46,7 @@ void printString(const string_impl&);
 #include<algorithm>
 
 typedef std::string string_impl;
+typedef char char_impl;
 typedef size_t string_size;
 
 inline void lower_case(string_impl* str)
@@ -55,6 +62,10 @@ inline string_size string_find(const string_impl& me, const char* you)
 
 inline void printString(const string_impl& str)
     { printf("%s\n", str.c_str()); }
+
+inline bool check_if_alpha(char_impl c) {
+    return isalpha(c);
+}
 
 #endif // ALIGN_HAS_UCI_STRING
 

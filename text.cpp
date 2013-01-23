@@ -95,15 +95,19 @@ void Text::open(const string& fname) {
     while (!file.eof()) {
         file.getline(c_line, 256);
 
-        /* v-- this doesn't seem to work
-        bool is_alnum = false;
-        for (char* cc = c_line; *cc != '\0'; ++cc)
-            is_alnum = is_alnum || isalpha(*cc);
+        string_impl line = c_line;
+
+        /*
+        // a single non alnum taints the string
+        // this should be extended to consider
+        // numbers as well XXX
+        bool is_alnum = true;
+        for (string_size i = 0; i < line.length(); ++i)
+            is_alnum = is_alnum && check_if_alpha(line[i]);
         if (!is_alnum)
             continue;
         */
 
-        string_impl line = c_line;
         lower_case(&line);
 
         if (_types.find(line) == _types.end())

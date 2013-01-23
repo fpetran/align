@@ -81,6 +81,15 @@ int main(int argc, char* argv[]) {
         const Dictionary* dict = df->get_dictionary(e_name, f_name);
         Candidates c(*dict);
         c.collect();
+
+        //for (Candidates::iterator ci = c.begin(); ci != c.end(); ++ci) {
+            //std::cout
+                    //<< ci->first.position() + 1
+                //<< " - ";
+            //for (WordToken& tr : ci->second)
+                //std::cout << tr.position() + 1 << " ";
+            //std::cout << std::endl;
+        //}
         SequenceContainer sc(&c);
         sc.initial_sequences();
         sc.expand_sequences();

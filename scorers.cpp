@@ -1,6 +1,9 @@
 // Copyright 2012 Florian Petran
 #include"scorers.h"
 
+#include<cmath>
+
+#include<iostream>
 #include<vector>
 
 #include"bi-sim.h"
@@ -46,12 +49,12 @@ float LengthScorer::operator()(const Sequence& seq) {
 float IndexdiffScorer::operator()(const Sequence& seq) {
     float result = 0.0;
 
-    int s_len = seq.first_pair().source().get_text().length();
-    int t_len = seq.first_pair().target().get_text().length();
+    float s_len = seq.first_pair().source().get_text().length();
+    float t_len = seq.first_pair().target().get_text().length();
 
     for (Sequence::iterator pair = seq.begin(); pair != seq.end(); ++pair)
-        result += abs((pair->slot() / s_len)
-                - (pair->target_slot() / t_len));
+        result += fabs((pair->slot() / s_len)
+                     - (pair->target_slot() / t_len));
 
     result = 1 - (result / seq.length());
 
