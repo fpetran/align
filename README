@@ -6,3 +6,13 @@ CMake
 Recommended:
 Doxygen - for documentation
 gtest - for the unit tests
+
+out of source build:
+- make a directory for the build (e.g. build/)
+- for debug build:
+  cmake ${SRC_DIR} -DINCLUDE_TESTS=1 -DINCLUDE_TAGS=1 -DCMAKE_BUILD_TYPE=Debug
+- for normal build:
+  cmake ${SRC_DIR}
+- make
+- for tests:
+  make test
