@@ -72,6 +72,12 @@ class SequenceContainer {
         SequenceContainer::iterator begin() const;
         SequenceContainer::iterator end() const;
 
+    protected:
+        // big three
+        SequenceContainer(const SequenceContainer&);
+        //~SequenceContainer();
+        //const SequenceContainer& operator=(const SequenceContainer&);
+
     private:
         //const SequenceContainer& operator=(const SequenceContainer&);
         std::list<Sequence> _list;

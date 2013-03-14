@@ -60,6 +60,24 @@ const SequenceContainer& SequenceContainer::operator=(
 }
 */
 
+/*
+SequenceContainer::SequenceContainer(const SequenceContainer& that) {
+    // dict and params can be copied as ptrs, since
+    // they're not going to change anyway, dict
+    // is owned by DictionaryFactory, and params is
+    // a singleton.
+    // I'm a bit doubtful as to how candidates will behave,
+    // since it will get changed, but OTOH, the original
+    // sequence shouldn't change it any more anyways. in any
+    // case we need to probably think about ownership semantics
+    // with the candidates pointer, which is currently all taken
+    // care of by main()
+    this->_dict = that._dict;
+    this->params = that.params;
+    this->_candidates = that._candidates;
+}
+*/
+
 SequenceContainer::iterator SequenceContainer::begin() const {
     return _list.begin();
 }
@@ -74,7 +92,7 @@ void SequenceContainer::make(const BreakAfterPhase br_phase) {
     expand_sequences();
     if (br_phase == BreakAfterPhase::Expand)
         return;
-    // repeat same process in reverse
+
     merge_sequences();
     if (br_phase == BreakAfterPhase::Merge)
         return;
@@ -87,9 +105,8 @@ void SequenceContainer::make(const BreakAfterPhase br_phase) {
 }
 
 void SequenceContainer::initial_sequences() {
-    Candidates::iterator source_first = _candidates->begin(),
-                         source_second = source_first;
-    ++source_second;
+    Candidates::iterator source_second = _candidates->begin(),
+                         source_first = source_second++;
 
     while (source_first != _candidates->end()
         && source_second != _candidates->end()) {
@@ -101,32 +118,23 @@ void SequenceContainer::initial_sequences() {
             ++skipped;
         }
 
-        if (skipped <= params->max_skip()) {
-            list<WordToken>::iterator
-                translation_first = source_first->second.begin(),
-                translation_second = source_second->second.begin();
+        WordToken&  e1 = source_first->first,
+                    e2 = source_second->first;
 
-            while (translation_first != source_first->second.end()
-                && translation_second != source_second->second.end()) {
-                Pair p1(source_first->first, *translation_first);
-                while (translation_second != source_second->second.end()
-                    && translation_first != source_first->second.end()) {
-                    Pair p2(source_second->first, *translation_second);
-                    // TODO allow for multiple sequence to be formed
-                    if (p1.targets_close(p2)) {
-                        _list.push_back(Sequence(*_dict, p1, p2));
-                        translation_second =
-                            source_second->second.erase(translation_second);
-                        translation_first =
-                            source_first->second.erase(translation_first);
-                    } else {
-                        ++translation_second;
-                    }
-                }
-                if (translation_first != source_first->second.end())
-                    ++translation_first;
-            }
-        }
+        list<WordToken>& e1_translations = source_first->second,
+                         e2_translations = source_second->second;
+
+        if (skipped <= params->max_skip())
+            for (WordToken& f1 : e1_translations)
+                for (WordToken& f2 : e2_translations)
+                    // monotony constraint
+                    // closeness condition
+                    if (f1.position() < f2.position()
+                        && f1.close_to(f2))
+                        _list.push_back(Sequence(*_dict,
+                                                Pair(e1, f1),
+                                                Pair(e2, f2)));
+
         ++source_first;
         if (source_first != _candidates->end()) {
             source_second = source_first;

@@ -10,6 +10,7 @@
 #include<map>
 
 #include"string_impl.h"
+#include"params.h"
 
 class Text;
 
@@ -56,6 +57,11 @@ class WordToken : public Word {
         }
         inline const WordType& get_type() const {
             return *_type;
+        }
+
+        inline bool close_to(const WordToken& other) const {
+            return
+                abs(this->_position - other._position) < Params::get()->closeness();
         }
 
     protected:
