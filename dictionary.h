@@ -98,6 +98,8 @@ class Dictionary {
         DictionaryFactory* factory;
         Text *_e, *_f;
         std::map<WordType, std::list<WordType>> _storage;
+        const std::list<WordType> empty_entry;
+        //< an empty dictionary entry
 };
 
 #endif

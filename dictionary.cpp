@@ -179,8 +179,8 @@ const list<WordType>& Dictionary::lookup(const WordToken& lemma) const {
 
     // empty list - does it need to be kept separately? will it cause
     // an exception or memory corruption to look up a word that doesn't exit?
-    //if (!this->has(lemma))
-        //return XXX
+    if (!this->has(lemma) || !has_alpha(lemma.get_str()))
+        return empty_entry;
 
     return _storage.find(lemma.get_type())->second;
     // yes, this looks stupid. but operator[] is a potentially modifying

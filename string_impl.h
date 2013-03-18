@@ -69,4 +69,6 @@ inline bool check_if_alpha(char_impl c) {
 
 #endif // ALIGN_HAS_UCI_STRING
 
+bool has_alpha(const string_impl& str);
+
 #endif // ALIGN_STRING_IMPL_H
