@@ -83,30 +83,18 @@ Text::~Text() {
 }
 
 void Text::open(const string& fname) {
-    _fname = fname;
     ifstream file;
-    _length = 0;
 
-    file.open(_fname);
+    file.open(fname);
     if (!file.is_open())
         throw runtime_error(string("Text file not found: ") + fname);
 
+    int pos = 0;
     char c_line[256];
     while (!file.eof()) {
         file.getline(c_line, 256);
 
         string_impl line = c_line;
-
-        /*
-        // a single non alnum taints the string
-        // this should be extended to consider
-        // numbers as well XXX
-        bool is_alnum = true;
-        for (string_size i = 0; i < line.length(); ++i)
-            is_alnum = is_alnum && check_if_alpha(line[i]);
-        if (!is_alnum)
-            continue;
-        */
 
         lower_case(&line);
 
@@ -116,13 +104,16 @@ void Text::open(const string& fname) {
             string_ptrs[line] = new string_impl(line);
         WordToken tok = WordToken(this,
                                   string_ptrs[line],
-                                  _length,
+                                  pos,
                                   _types[line]);
         _types[line]->add_token(tok);
         _words.push_back(tok);
 
-        ++_length;
+        ++pos;
     }
+
+    _length = pos;
+    _fname = fname;
 
     file.clear();
     file.close();

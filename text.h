@@ -53,7 +53,7 @@ class WordToken : public Word {
             return !(*this == other);
         }
         inline bool operator<(const WordToken& other) const {
-            return this->_string_realization < other._string_realization;
+            return this->_position < other._position;
         }
         inline const WordType& get_type() const {
             return *_type;
