@@ -6,6 +6,7 @@
 #include<map>
 #include<utility>
 #include<list>
+#include<algorithm>
 
 #include"text.h"
 

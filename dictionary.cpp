@@ -169,6 +169,11 @@ void Dictionary::read(ifstream* file) {
         WordType* ft = _f->_types.at(tword);
         WordType* et = _e->_types.at(sword);
 
+        if (std::find(_storage[*et].begin(),
+                      _storage[*et].end(),
+                      *ft) != _storage[*et].end())
+            continue;
+
         _storage[*et].push_back(*ft);
     }
 }
@@ -182,10 +187,10 @@ const list<WordType>& Dictionary::lookup(const WordToken& lemma) const {
     if (!this->has(lemma) || !has_alpha(lemma.get_str()))
         return empty_entry;
 
-    return _storage.find(lemma.get_type())->second;
-    // yes, this looks stupid. but operator[] is a potentially modifying
-    // procedure, as it may insert a new element into the map, so it can't
-    // be used with const
+    // this needs to be at(), because operator[] doesn't return
+    // const. if the range checking proves to be too expensive,
+    // change to operator[] and const_cast
+    return _storage.at(lemma.get_type());
 }
 
 
