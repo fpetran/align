@@ -104,6 +104,8 @@ void Sequence::add(const Pair& p) {
         _slot = p.slot();
     _list.push_back(p);
     _back_slot = p.slot();
+    p.source().add_to_sequence(this);
+    p.target().add_to_sequence(this);
     ++_length;
 }
 

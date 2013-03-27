@@ -12,6 +12,7 @@
 #include"string_impl.h"
 #include"params.h"
 
+class Sequence;
 class Text;
 
 /**
@@ -61,7 +62,20 @@ class WordToken : public Word {
 
         inline bool close_to(const WordToken& other) const {
             return
-                abs(this->_position - other._position) < Params::get()->closeness();
+                abs(this->_position - other._position)
+              < Params::get()->closeness();
+        }
+
+        inline void add_to_sequence(Sequence* seq) const {
+            _sequences.push_back(seq);
+        }
+
+        inline std::list<Sequence*>& get_sequences() const {
+            return _sequences;
+        }
+
+        inline void remove_from(Sequence* seq) const {
+            _sequences.remove(seq);
         }
 
     protected:
@@ -72,6 +86,7 @@ class WordToken : public Word {
         int _position;
         const WordType* _type;
         const string_impl* _string_realization;
+        mutable std::list<Sequence*> _sequences;
 };
 
 /**
