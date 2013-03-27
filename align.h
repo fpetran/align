@@ -6,6 +6,7 @@
 
 #include<list>
 #include<utility>
+#include<map>
 
 #include"params.h"
 #include"text.h"
@@ -21,7 +22,7 @@ class Candidates {
         void collect();
         //< collect all translation candidates
 
-        typedef std::list<std::pair<WordToken, std::list<WordToken>>>::iterator
+        typedef std::map<WordToken, std::list<WordToken>>::iterator
             iterator;
 
         inline Candidates::iterator begin() {
@@ -30,9 +31,15 @@ class Candidates {
         inline Candidates::iterator end() {
             return _translations.end();
         };
+        inline std::list<WordToken>& at(const WordToken& pos) {
+            return _translations.at(pos);
+        }
+        inline std::list<WordToken>& operator[](const WordToken& pos) {
+            return _translations[pos];
+        }
 
     protected:
-        std::list<std::pair<WordToken, std::list<WordToken>>> _translations;
+        std::map<WordToken, std::list<WordToken>> _translations;
         const Dictionary* _dict;
 };
 
@@ -50,19 +57,19 @@ class SequenceContainer {
         explicit SequenceContainer(Candidates*);
 
         void make(const BreakAfterPhase = BreakAfterPhase::Never);
-        // TODO
+        // TODO(fpetran):
         // find another way to ensure the correct sequence
         // of steps. the latter part of the sequence can be
         // varied, and the reverse sequences step occurs before
         // the merge step and should take place outside of the
         // SC
-        void initial_sequences();
+        SequenceContainer& initial_sequences();
         //< construct initial bigrams of pairs
-        void expand_sequences();
+        SequenceContainer& expand_sequences();
         //< expand the sequences at tail end
-        void merge_sequences();
-        void collect_scores();
-        void get_topranking();
+        SequenceContainer& merge_sequences();
+        SequenceContainer& collect_scores();
+        SequenceContainer& get_topranking();
 
         typedef std::list<Sequence>::const_iterator iterator;
 
