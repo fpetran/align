@@ -3,7 +3,6 @@
 
 #include<cmath>
 
-#include<iostream>
 #include<vector>
 
 #include"bi-sim.h"

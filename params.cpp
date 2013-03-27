@@ -6,8 +6,8 @@ using std::string;
 
 Params* Params::_instance = new Params;
 
-Params::Params() :
-    _closeness(2), _max_skip(1), _dict_base(".") {}
+Params::Params()
+    : _closeness(2), _max_skip(1), _dict_base(".") {}
 
 Params* Params::get() {
     return _instance;

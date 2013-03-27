@@ -16,11 +16,11 @@ class Params {
         static Params* get();
 
         int max_skip();
-        void set_max_skip(int);
+        void set_max_skip(int value);
         int closeness();
-        void set_closeness(int);
+        void set_closeness(int value);
         const std::string& dict_base();
-        void set_dict_base(const std::string&);
+        void set_dict_base(const std::string& dirname);
 
     private:
         static Params* _instance;

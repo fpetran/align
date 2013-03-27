@@ -62,7 +62,7 @@ class Sequence {
 
 
         bool operator==(const Sequence&) const;
-        bool has_target(int);
+        bool has_target(int target_position);
         bool has_target(const Pair&);
         //< checks if a target index is already in
         //< the sequence. POTENTIALLY EXPENSIVE
