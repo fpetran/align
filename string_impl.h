@@ -40,6 +40,8 @@ inline bool check_if_alpha(char_impl c) {
 // printString for UCI needs a local char_ptr, so it's not inlined
 void printString(const string_impl&);
 
+char* to_cstr(const string_impl&);
+
 #else
 
 #include<string>
@@ -65,6 +67,10 @@ inline void printString(const string_impl& str)
 
 inline bool check_if_alpha(char_impl c) {
     return isalpha(c);
+}
+
+inline char* to_cstr(const string_impl& str) {
+    return str.c_str();
 }
 
 #endif // ALIGN_HAS_UCI_STRING

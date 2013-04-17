@@ -3,12 +3,17 @@
 
 #ifdef ALIGN_HAS_UCI_STRING
 
-void printString(const string_impl& str) {
+char* to_cstr(const string_impl& str) {
     static char out[256];
-    out[str.extract(0, 99, out)] = 0;
+    out[str.extract(0,99, out)] = 0;
+    return out;
+}
 
+void printString(const string_impl& str) {
+    char* out = to_cstr(str);
     printf("%s\n", out);
 }
+
 #endif
 
 bool has_alpha(const string_impl& str) {
