@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 
     po::variables_map m;
     po::store(po::parse_command_line(argc, argv, desc), m);
-    // TODO make config file name variable
+    // TODO(fpetran) make config file name variable
     //po::store(po::parse_config_file("align.cfg", desc), m);
     po::notify(m);
 
@@ -82,38 +82,44 @@ int main(int argc, char* argv[]) {
         Candidates c(*dict);
         c.collect();
 
-        //for (Candidates::iterator ci = c.begin(); ci != c.end(); ++ci) {
-            //std::cout
-                    //<< ci->first.position() + 1
-                //<< " - ";
-            //for (WordToken& tr : ci->second)
-                //std::cout << tr.position() + 1 << " ";
-            //std::cout << std::endl;
-        //}
+        /*
+        static char out[256];
+        for (auto cand = c.begin(); cand != c.end(); ++cand) {
+            if (cand->second.empty())
+                continue;
+            out[cand->first.get_str().extract(0, 99, out)] = 0;
+            std::cout << cand->first.position() 
+                      << " (" << out << ") "
+                      << " - ";
+            for (auto tr = cand->second.begin(); tr != cand->second.end(); ++tr) {
+                out[tr->get_str().extract(0, 99, out)] = 0;
+                std::cout << tr->position()
+                          << " (" << out << ") ";
+            }
+            std::cout << std::endl;
+        }
+        */
+
         SequenceContainer sc(&c);
-        sc.initial_sequences();
-        sc.expand_sequences();
+        sc.initial_sequences()
+          .expand_sequences();
 
         const Dictionary* rdict = df->get_dictionary(f_name, e_name);
         Candidates rc(*rdict);
         SequenceContainer rsc(&rc);
-        rsc.initial_sequences();
-        rsc.expand_sequences();
+        rsc.initial_sequences()
+           .expand_sequences();
 
         sc.merge(rsc.reverse());
 
-        //SequenceContainer sc_reverse = sc.reverse();
-        //sc_reverse.expand_sequences();
-        //sc.merge(sc_reverse);
-        sc.merge_sequences();
-        sc.collect_scores();
-        sc.get_topranking();
+        sc.merge_sequences()
+          .collect_scores()
+          .get_topranking();
 
-
-        for (auto seq = sc.begin(); seq != sc.end(); ++seq)
-            for (auto pair = seq->begin(); pair != seq->end(); ++pair)
+        for (const Sequence& seq : sc)
+            for (const Pair& pair : seq)
                 std::cout
-                    << pair->slot() << " - " << pair->target_slot()
+                    << pair.slot() << " - " << pair.target_slot()
                     << std::endl;
     }
     catch(std::runtime_error e) {
@@ -122,5 +128,5 @@ int main(int argc, char* argv[]) {
     }
 
     return 0;
-    //Dictionary dict( e_name, f_name );
 }
+

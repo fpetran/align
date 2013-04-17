@@ -7,6 +7,11 @@
 using std::vector;
 using std::max;
 
+// TODO(fpetran)
+// this is hard coded to rely on icu
+// should be made to work with std::string
+// too
+
 namespace bi_sim {
     typedef unsigned int uint;
     typedef vector<num_ty> mat_ty;
