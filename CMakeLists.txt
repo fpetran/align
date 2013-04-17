@@ -83,7 +83,15 @@ target_link_libraries(palign
     ${Boost_LIBRARIES}
     ${ICU_LIBRARIES}
     )
-install(TARGETS palign DESTINATION ${INSTALL_DESTINATION})
+add_executable(mkdict mkdict.cpp)
+# mkdict needs to link to align for the string stuff
+# that should probably be moved elsewhere
+target_link_libraries(mkdict
+    bisim
+    align
+    ${ICU_LIBRARIES}
+)
+install(TARGETS palign mkdict DESTINATION ${INSTALL_DESTINATION})
 
 # optional stuff
 find_package(Doxygen)
