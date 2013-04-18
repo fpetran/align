@@ -31,6 +31,9 @@ set (align_TEST_F "65_M21.txt")
 set (align_DEFAULT_MAX_SKIP 1)
 set (align_DEFAULT_CLOSENESS 2)
 
+set (dictionary_WORDLENGTH_THRESHOLD 2)
+set (dictionary_COGNATE_THRESHOLD 0.7)
+
 # this is for stuff that can be set by cmake
 configure_file (
     "${PROJECT_SOURCE_DIR}/align_config.h.in"
@@ -89,6 +92,7 @@ add_executable(mkdict mkdict.cpp)
 target_link_libraries(mkdict
     bisim
     align
+    ${Boost_LIBRARIES}
     ${ICU_LIBRARIES}
 )
 install(TARGETS palign mkdict DESTINATION ${INSTALL_DESTINATION})

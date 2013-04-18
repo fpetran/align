@@ -18,10 +18,11 @@
 
 #include"bi-sim.h"
 #include"string_impl.h"
+#include"align_config.h"
 
 class Producer {
     public:
-        Producer() : notified(false) {};
+        Producer() : notified(false) {}
         std::condition_variable cv;
         std::mutex m;
         void notify();
@@ -45,7 +46,11 @@ class Result : public Producer {
         void add_line(const string_impl& line);
         string_impl get_line();
         bool empty();
+        inline const string_impl& get_header() {
+            return header;
+        }
     private:
+        string_impl header;
         string_impl dict_head(const char* e,
                               const char* f);
         std::queue<string_impl> lines;
@@ -65,7 +70,9 @@ typedef std::map<std::string, File*> FileSet;
 void file_reader(const std::string& fname, const FileSet& files);
 
 void fileset_processor(const std::string& e, const std::string& f,
-                       const FileSet& files, ResultSet* results);
+                       const FileSet& files, ResultSet* results,
+                       const int wordlength_threshold,
+                       const bi_sim::num_ty cognate_threshold);
 
 void results_outputter(ResultSet* results);
 
