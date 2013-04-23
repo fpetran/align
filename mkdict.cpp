@@ -3,10 +3,12 @@
 
 #include<utility>
 #include<string>
+#include<vector>
 #include<algorithm>
 
 #include<boost/program_options.hpp>
 
+using std::vector;
 using std::pair;
 using std::string;
 using std::ifstream;
@@ -48,6 +50,8 @@ void File::open(const string& fname) {
     string line;
     ifstream file;
     file.open(fname);
+    if (!file.is_open())
+        throw std::runtime_error(fname + " : File not found!");
     while (file >> line)
         this->words.push_back(line.c_str());
     std::sort(words.begin(), words.end());
@@ -100,21 +104,33 @@ bool ResultSet::empty() { return results.empty(); }
 
 //////////////////////// worker functions /////////////////////////////////////
 
+mutex dict_cout_mutex;
+
 void file_reader(const string& fname,
                  const FileSet& files) {
-    std::cout << "Reading file...\n";
+    dict_cout_mutex.lock();
+    std::cout << "Reading file " << fname << "..." << std::endl;
+    dict_cout_mutex.unlock();
+
     File* f = files.at(fname);
     std::lock_guard<mutex> lock(f->m);
     f->open(fname);
     f->notify();
-    std::cout << "...done reading!\n";
+
+    dict_cout_mutex.lock();
+    std::cout << "...done reading " << fname << "." << std::endl;
+    dict_cout_mutex.unlock();
 }
 
 void fileset_processor(const string& e_name, const string& f_name,
                        const FileSet& files, ResultSet* resultset,
                        const int wordlength_threshold,
                        const bi_sim::num_ty cognate_threshold) {
-    std::cout << "Processing pair...\n";
+    dict_cout_mutex.lock();
+    std::cout << "Processing pair "
+              << e_name << " - " << f_name << "..." << std::endl;
+    dict_cout_mutex.unlock();
+
     File *e = files.at(e_name),
          *f = files.at(f_name);
     std::unique_lock<mutex> lock_e(e->m),
@@ -146,7 +162,11 @@ void fileset_processor(const string& e_name, const string& f_name,
     r->done = true;
     r_reverse->notify();
     r_reverse->done = true;
-    std::cout << "...done processing!\n";
+
+    dict_cout_mutex.lock();
+    std::cout << "...done processing"
+              << e_name << " - " << f_name << "!" << std::endl;
+    dict_cout_mutex.unlock();
 }
 
 /* TODO(fpetran):
@@ -157,7 +177,10 @@ void fileset_processor(const string& e_name, const string& f_name,
  * should be written to files or to stdout.
  */
 void result_outputter(ResultSet* resultset) {
+    dict_cout_mutex.lock();
     std::cout << "Writing to files...\n";
+    dict_cout_mutex.unlock();
+
     int result_id = 100001;
     std::unique_lock<mutex> set_lock(resultset->m);
     ofstream index_file;
@@ -183,6 +206,10 @@ void result_outputter(ResultSet* resultset) {
                    << ": " << to_cstr(r1->get_header())
                    << std::endl;
         file.close();
+        dict_cout_mutex.lock();
+        std::cout << "...done writing " 
+                  << std::to_string(result_id) << "." << std::endl;
+        dict_cout_mutex.unlock();
         result_id++;
         delete r1;
 
@@ -197,6 +224,10 @@ void result_outputter(ResultSet* resultset) {
                    << ": " << to_cstr(r2->get_header())
                    << std::endl;
         file.close();
+        dict_cout_mutex.lock();
+        std::cout << "...done writing " 
+                  << std::to_string(result_id) << "." << std::endl;
+        dict_cout_mutex.unlock();
         result_id++;
         delete r2;
     }
@@ -212,6 +243,7 @@ int main(int argc, char* argv[]) {
 
     int wordlength_threshold;
     bi_sim::num_ty cognate_threshold;
+    vector<string> input_files;
 
     desc.add_options()
         ("help,h",
@@ -225,24 +257,46 @@ int main(int argc, char* argv[]) {
             ->default_value(DICTIONARY_COGNATE_THRESHOLD),
          "Minimum bi-sim value for two words to be considered cognates")
         ; //NOLINT
+    po::options_description hidden("Hidden options");
+    hidden.add_options()
+        ("input-file", po::value<vector<string>>(&input_files), "input file");
+    po::positional_options_description p;
+    p.add("input-file", -1);
+    po::options_description cmdline_opts;
+    cmdline_opts.add(desc).add(hidden);
+
     po::variables_map m;
-    po::store(po::parse_command_line(argc, argv, desc), m);
+    po::store(po::command_line_parser(argc, argv).
+                  options(cmdline_opts).positional(p).run(), m);
     po::notify(m);
+
+    if (m.count("help")) {
+        std::cout << desc << std::endl;
+        return 0;
+    }
+
+    if (!m.count("input-file") || input_files.size() <= 1) {
+        std::cout << "Error: Not enough input files specified!" << std::endl
+                  << desc << std::endl;
+        return 1;
+    }
 
     try {
         FileSet files;
         ResultSet results;
 
-        for (int i = 1; i < argc; ++i) {
-            files[argv[i]] = new File();
+        for (const string& fname : input_files) {
+            files[fname] = new File();
             thread(file_reader,
-                   argv[i], files).detach();
+                   fname, files).detach();
         }
 
-        for (int i = 1; i < argc; ++i)
-            for (int j = i + 1; j < argc; ++j)
+        for (auto e_name = input_files.begin();
+             e_name != input_files.end(); ++e_name)
+            for (auto f_name = e_name + 1;
+                 f_name != input_files.end(); ++f_name)
                 thread(fileset_processor,
-                       argv[i], argv[j],
+                       *e_name, *f_name,
                        files, &results,
                        wordlength_threshold,
                        cognate_threshold).detach();
