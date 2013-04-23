@@ -56,6 +56,11 @@ class SequenceContainer {
     public:
         explicit SequenceContainer(Candidates*);
 
+        SequenceContainer() = delete;
+        SequenceContainer(const SequenceContainer&) = delete;
+        const SequenceContainer&
+            operator=(const SequenceContainer&) = delete;
+
         void make(const BreakAfterPhase = BreakAfterPhase::Never);
         // TODO(fpetran):
         // find another way to ensure the correct sequence
@@ -79,14 +84,7 @@ class SequenceContainer {
         SequenceContainer::iterator begin() const;
         SequenceContainer::iterator end() const;
 
-    protected:
-        // big three
-        SequenceContainer(const SequenceContainer&);
-        //~SequenceContainer();
-        //const SequenceContainer& operator=(const SequenceContainer&);
-
     private:
-        //const SequenceContainer& operator=(const SequenceContainer&);
         std::list<Sequence> _list;
 
         Params* params;

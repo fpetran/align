@@ -48,37 +48,6 @@ SequenceContainer::SequenceContainer(Candidates* c) {
     this->params = Params::get();
 }
 
-/*
-const SequenceContainer& SequenceContainer::operator=(
-        const SequenceContainer& that) {
-    this->_dict = that._dict;
-    this->params = Params::get();
-
-    this->_candidates = that._candidates;
-    this->_list = that._list;
-
-    return *this;
-}
-*/
-
-/*
-SequenceContainer::SequenceContainer(const SequenceContainer& that) {
-    // dict and params can be copied as ptrs, since
-    // they're not going to change anyway, dict
-    // is owned by DictionaryFactory, and params is
-    // a singleton.
-    // I'm a bit doubtful as to how candidates will behave,
-    // since it will get changed, but OTOH, the original
-    // sequence shouldn't change it any more anyways. in any
-    // case we need to probably think about ownership semantics
-    // with the candidates pointer, which is currently all taken
-    // care of by main()
-    this->_dict = that._dict;
-    this->params = that.params;
-    this->_candidates = that._candidates;
-}
-*/
-
 SequenceContainer::iterator SequenceContainer::begin() const {
     return _list.begin();
 }
