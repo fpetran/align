@@ -24,7 +24,7 @@ inline bool is_cognate(const string_impl& w1, const string_impl& w2,
                        const bi_sim::num_ty cognate_threshold) {
     return (w1 == w2)
         || (std::min(w1.length(), w2.length()) > wordlength_threshold
-        && bi_sim::bi_sim(w1, w2) > cognate_threshold);
+            && bi_sim::bi_sim(w1, w2) >= cognate_threshold);
 }
 }
 
@@ -158,13 +158,13 @@ void fileset_processor(const string& e_name, const string& f_name,
                 r_reverse->add_line(f_word + " = " + e_word);
                 r_reverse->notify();
             }
-    r->notify();
     r->done = true;
-    r_reverse->notify();
+    r->notify();
     r_reverse->done = true;
+    r_reverse->notify();
 
     dict_cout_mutex.lock();
-    std::cout << "...done processing"
+    std::cout << "...done processing "
               << e_name << " - " << f_name << "!" << std::endl;
     dict_cout_mutex.unlock();
 }
@@ -195,13 +195,19 @@ void result_outputter(ResultSet* resultset) {
 
         ofstream file;
         file.open(std::to_string(result_id));
-        while (!r1->done && !r1->empty()) {
+        while (!r1->done) {
             std::unique_lock<mutex> lock(r1->m);
             while (!r1->is_notified())
                 r1->cv.wait(lock);
 
-            file << to_cstr(r1->get_line()) << std::endl;
+            file <<  to_cstr(r1->get_line()) << std::endl;
         }
+        // output anything that remains for the results
+        // TODO(fpetran) find out if there is a less clumsy
+        // solution for this
+        while (!r1->empty())
+            file << to_cstr(r1->get_line()) << std::endl;
+
         index_file << std::to_string(result_id)
                    << ": " << to_cstr(r1->get_header())
                    << std::endl;
