@@ -9,6 +9,15 @@
 #include"align_config.h"
 #include"string_impl.h"
 
+/*
+ * customer test
+ * test example alignment with two texts
+ * each phase has its own test, with the expected results
+ * hardcoded there.
+ * TODO make better example texts - the one used right now are
+ *      real anselm texts.
+ */
+
 
 class AlignTest_Fixture : public testing::Test {
     protected:

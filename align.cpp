@@ -194,7 +194,7 @@ SequenceContainer& SequenceContainer::collect_scores() {
 
     // normalize scores
     for (auto sc = scores_all.begin(); sc != scores_all.end(); ++sc)
-        for (int ii = 0; ii < scoring_methods.size(); ++ii)
+        for (unsigned int ii = 0; ii < scoring_methods.size(); ++ii)
             sc->at(ii) /= scoring_methods.at(ii)->get_max();
 
     // collect overall score from single methods

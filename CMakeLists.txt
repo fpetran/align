@@ -21,12 +21,6 @@ set(align_VERSION_MINOR 1)
 set(align_VERSION_PATCH 0)
 set(align_VERSION ${align_VERSION_MAJOR}.${align_VERSION_MINOR}.${align_VERSION_PATCH})
 
-# this crap is used for testing
-set (align_DICT_BASE "${PROJECT_SOURCE_DIR}/test_data/dict/")
-set (align_FILE_BASE "${PROJECT_SOURCE_DIR}/test_data")
-set (align_TEST_E "21_Ba.txt")
-set (align_TEST_F "65_M21.txt")
-
 # default value for params
 set (align_DEFAULT_MAX_SKIP 1)
 set (align_DEFAULT_CLOSENESS 2)

@@ -32,7 +32,6 @@ class WordTest_Fixture : public testing::Test {
         }
         virtual void TearDown() {
             // called after each test
-            //delete _dict;
         }
 
         /// get first line from a file

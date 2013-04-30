@@ -2,16 +2,14 @@
 #include<string>
 #include<iostream>
 
-#ifndef ALIGN_USE_BUILTIN_PARAM
 #include<boost/program_options.hpp>
-namespace po = boost::program_options;
-#endif
 
 #include"align.h"
 #include"align_config.h"
 
+namespace po = boost::program_options;
+
 int main(int argc, char* argv[]) {
-#ifndef ALIGN_USE_BUILTIN_PARAM
     po::options_description desc
         (static_cast<std::string>("pAlign v")
           + ALIGN_VERSION
@@ -50,13 +48,14 @@ int main(int argc, char* argv[]) {
     // TODO(fpetran) make config file name variable
     //po::store(po::parse_config_file("align.cfg", desc), m);
     po::notify(m);
+    Params* par = Params::get();
 
     if (m.count("skip"))
-        Params::get()->set_max_skip(skip);
+        par->set_max_skip(skip);
     if (m.count("closeness"))
-        Params::get()->set_closeness(closeness);
+        par->set_closeness(closeness);
     if (m.count("dictionary"))
-        Params::get()->set_dict_base(dict_base);
+        par->set_dict_base(dict_base);
 
     if (m.count("help")) {
         std::cout << desc << std::endl;
@@ -68,10 +67,6 @@ int main(int argc, char* argv[]) {
             << desc << std::endl;
         return 1;
     }
-#else
-    Params::get()->set_dict_base(ALIGN_DICT_BASE);
-#endif // ALIGN_USE_BUILTIN_PARAM
-
 
     try {
         std::string e_name = m["source"].as<std::string>(),
