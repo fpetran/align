@@ -31,13 +31,20 @@ void Candidates::collect() {
             continue;
 
         list<WordType> f_types = _dict->lookup(word);
-        list<WordToken> f_tokens;
+        list<WordToken>* f_tokens = new list<WordToken>();
         for (const WordType& f_type : f_types)
             for (const WordToken& f_token : f_type.get_tokens())
-                f_tokens.push_back(f_token);
+                f_tokens->push_back(f_token);
 
         _translations[word] = f_tokens;
     }
+}
+
+Candidates::~Candidates() {
+    for (auto tr = _translations.begin();
+         tr != _translations.end();
+         ++tr)
+        delete tr->second;
 }
 
 ///////////////////////// SequenceContainer ///////////////////////////////////
@@ -77,16 +84,17 @@ void SequenceContainer::make(const BreakAfterPhase br_phase) {
 SequenceContainer& SequenceContainer::initial_sequences() {
     for (auto cand1 = _candidates->begin();
          cand1 != _candidates->end(); ++cand1) {
-        if (cand1->second.empty())
+        if (cand1->second->empty())
             continue;
 
-        auto cand2 = cand1;
-        int skipped = -1;
-        do {
+        auto cand2 = cand1; ++cand2;
+        int skipped = 0;
+        while (skipped <= params->max_skip()
+            && cand2->second->empty()
+            && cand2 != _candidates->end()) {
             ++skipped;
             ++cand2;
-        } while (cand2->second.empty()
-              && cand2 != _candidates->end());
+        }
 
         if (skipped > params->max_skip()
          || cand2 == _candidates->end())
@@ -94,25 +102,28 @@ SequenceContainer& SequenceContainer::initial_sequences() {
 
         const WordToken& e1 = cand1->first,
                          e2 = cand2->first;
-        list<WordToken>& e1_translations = cand1->second,
-                         e2_translations = cand2->second;
+        list<WordToken> *e1_translations = cand1->second,
+                        *e2_translations = cand2->second;
+        auto f1 = e1_translations->begin(),
+             f2 = e2_translations->begin();
 
-        for (auto f1 = e1_translations.begin();
-             f1 != e1_translations.end(); ++f1) {
+        while (f1 != e1_translations->end()) {
             bool f1_used = false;
-            for (auto f2 = e2_translations.begin();
-                 f2 != e2_translations.end(); ++f2) {
+            while (f2 != e2_translations->end()) {
                 if (f1->position() < f2->position()
                     && f1->close_to(*f2)) {
                     _list.push_back(Sequence(*_dict,
                                              Pair(e1, *f1),
                                              Pair(e2, *f2)));
                     f1_used = true;
-                    f2 = e2_translations.erase(f2);
-                }
+                    f2 = e2_translations->erase(f2);
+                } else
+                    ++f2;
             }
             if (f1_used)
-                f1 = e1_translations.erase(f1);
+                f1 = e1_translations->erase(f1);
+            else
+                ++f1;
         }
     }
 
@@ -133,18 +144,18 @@ SequenceContainer& SequenceContainer::expand_sequences() {
                  next_slot != _candidates->end(); ++next_slot)
                 if (next_slot->first.position()
                     > seq.last_pair().source().position()
-                 && !next_slot->second.empty())
+                 && !next_slot->second->empty())
                     break;
 
             if (next_slot == _candidates->end())
                 continue;
 
-            for (list<WordToken>::iterator tr = next_slot->second.begin();
-                 tr != next_slot->second.end(); ++tr) {
+            for (auto tr = next_slot->second->begin();
+                 tr != next_slot->second->end(); ++tr) {
                 Pair p(next_slot->first, *tr);
                 if (seq.add_if_close(p)) {
                     ++pairs_added;
-                    tr = next_slot->second.erase(tr);
+                    tr = next_slot->second->erase(tr);
                 }
             }
         }

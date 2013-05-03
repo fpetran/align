@@ -18,11 +18,15 @@ class Candidates {
     friend class SequenceContainer;
     public:
         explicit Candidates(const Dictionary&);
+        ~Candidates();
+        Candidates() = delete;
+        Candidates(const Candidates&) = delete;
+        const Candidates& operator=(const Candidates&) = delete;
 
         void collect();
         //< collect all translation candidates
 
-        typedef std::map<WordToken, std::list<WordToken>>::iterator
+        typedef std::map<WordToken, std::list<WordToken>*>::iterator
             iterator;
 
         inline Candidates::iterator begin() {
@@ -31,15 +35,15 @@ class Candidates {
         inline Candidates::iterator end() {
             return _translations.end();
         };
-        inline std::list<WordToken>& at(const WordToken& pos) {
+        inline std::list<WordToken>* at(const WordToken& pos) const {
             return _translations.at(pos);
         }
-        inline std::list<WordToken>& operator[](const WordToken& pos) {
+        inline std::list<WordToken>* operator[](const WordToken& pos) {
             return _translations[pos];
         }
 
     protected:
-        std::map<WordToken, std::list<WordToken>> _translations;
+        std::map<WordToken, std::list<WordToken>*> _translations;
         const Dictionary* _dict;
 };
 
