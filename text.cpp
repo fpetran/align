@@ -4,6 +4,7 @@
 #include<cctype>
 
 #include<string>
+#include<list>
 #include<fstream>
 #include<stdexcept>
 #include<utility>
@@ -11,6 +12,7 @@
 #include"string_impl.h"
 
 using std::string;
+using std::list;
 using std::ifstream;
 using std::pair;
 using std::out_of_range;
@@ -28,17 +30,29 @@ const Text& Word::get_text() const {
 
 /////////////////////////////// WordToken /////////////////////////////////////
 
-WordToken::WordToken(const Text* text, const string_impl* s,
+WordToken::WordToken(const Text* text,
+                     list<Sequence*> * seqs,
+                     const string_impl* s,
                      const int pos, const WordType* type)
     : Word(text), _position(pos)  {
     _string_realization = s;
     _type = type;
+    _sequences = seqs;
 }
 
 bool WordToken::operator==(const WordToken& other) const {
     return
            this->_type == other._type
         && this->_position == other._position;
+}
+
+void WordToken::remove_from(const Sequence* seq) const {
+    auto si = _sequences->begin();
+    while (si != _sequences->end())
+        if (*si == seq)
+            si = _sequences->erase(si);
+        else
+            ++si;
 }
 
 /////////////////////////////// WordType //////////////////////////////////////
@@ -102,7 +116,9 @@ void Text::open(const string& fname) {
             _types[line] = new WordType(this);
         if (string_ptrs.find(line) == string_ptrs.end())
             string_ptrs[line] = new string_impl(line);
+        list<Sequence*> *seqs = new list<Sequence*>();
         WordToken tok = WordToken(this,
+                                  seqs,
                                   string_ptrs[line],
                                   pos,
                                   _types[line]);

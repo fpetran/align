@@ -19,6 +19,7 @@ class Candidates {
     public:
         explicit Candidates(const Dictionary&);
         ~Candidates();
+
         Candidates() = delete;
         Candidates(const Candidates&) = delete;
         const Candidates& operator=(const Candidates&) = delete;
@@ -59,6 +60,7 @@ enum class BreakAfterPhase {
 class SequenceContainer {
     public:
         explicit SequenceContainer(Candidates*);
+        ~SequenceContainer();
 
         SequenceContainer() = delete;
         SequenceContainer(const SequenceContainer&) = delete;
@@ -80,16 +82,17 @@ class SequenceContainer {
         SequenceContainer& collect_scores();
         SequenceContainer& get_topranking();
 
-        typedef std::list<Sequence>::const_iterator iterator;
+        typedef std::list<Sequence*>::const_iterator iterator;
 
         const SequenceContainer& reverse();
         const SequenceContainer& merge(const SequenceContainer&);
 
         SequenceContainer::iterator begin() const;
         SequenceContainer::iterator end() const;
+        inline int length() { return _list.size(); }
 
     private:
-        std::list<Sequence> _list;
+        std::list<Sequence*> _list;
 
         Params* params;
         Candidates* _candidates;

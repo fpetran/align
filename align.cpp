@@ -55,6 +55,11 @@ SequenceContainer::SequenceContainer(Candidates* c) {
     this->params = Params::get();
 }
 
+SequenceContainer::~SequenceContainer() {
+    for (Sequence* seq : _list)
+        delete seq;
+}
+
 SequenceContainer::iterator SequenceContainer::begin() const {
     return _list.begin();
 }
@@ -109,20 +114,20 @@ SequenceContainer& SequenceContainer::initial_sequences() {
 
         while (f1 != e1_translations->end()) {
             bool f1_used = false;
+            f2 = e2_translations->begin();
             while (f2 != e2_translations->end()) {
                 if (f1->position() < f2->position()
                     && f1->close_to(*f2)) {
-                    _list.push_back(Sequence(*_dict,
-                                             Pair(e1, *f1),
-                                             Pair(e2, *f2)));
+                    _list.push_back(new Sequence(*_dict,
+                                                 Pair(e1, *f1),
+                                                 Pair(e2, *f2)));
                     f1_used = true;
+                    f1 = e1_translations->erase(f1);
                     f2 = e2_translations->erase(f2);
                 } else
                     ++f2;
             }
-            if (f1_used)
-                f1 = e1_translations->erase(f1);
-            else
+            if (!f1_used)
                 ++f1;
         }
     }
@@ -137,13 +142,13 @@ SequenceContainer& SequenceContainer::expand_sequences() {
     // next->first > seq->back_slot too
     do {
         pairs_added = 0;
-        for (Sequence& seq : _list) {
+        for (Sequence* seq : _list) {
             // get next candidates entry for the sequence
             Candidates::iterator next_slot;
             for (next_slot = _candidates->begin();
                  next_slot != _candidates->end(); ++next_slot)
                 if (next_slot->first.position()
-                    > seq.last_pair().source().position()
+                    > seq->last_pair().source().position()
                  && !next_slot->second->empty())
                     break;
 
@@ -153,7 +158,7 @@ SequenceContainer& SequenceContainer::expand_sequences() {
             for (auto tr = next_slot->second->begin();
                  tr != next_slot->second->end(); ++tr) {
                 Pair p(next_slot->first, *tr);
-                if (seq.add_if_close(p)) {
+                if (seq->add_if_close(p)) {
                     ++pairs_added;
                     tr = next_slot->second->erase(tr);
                 }
@@ -170,19 +175,19 @@ SequenceContainer& SequenceContainer::merge_sequences() {
     do {
         combined = 0;
         // can't use our typedef here, because these aren't const
-        for (list<Sequence>::iterator seq = _list.begin();
+        for (list<Sequence*>::iterator seq = _list.begin();
                 seq != _list.end(); ++seq) {
-            list<Sequence>::iterator other = seq;
+            list<Sequence*>::iterator other = seq;
 
             while (other != _list.end() &&
-                    other->slot() <= seq->back_slot())
+                    (*other)->slot() <= (*seq)->back_slot())
                 ++other;
 
             if (other == _list.end())
                 continue; // break instead?
 
-            if (seq->last_pair().both_close(other->first_pair())) {
-                seq->merge(*other);
+            if ((*seq)->last_pair().both_close((*other)->first_pair())) {
+                (*seq)->merge(**other);
                 other = _list.erase(other);
                 ++combined;
             }
@@ -197,10 +202,10 @@ SequenceContainer& SequenceContainer::collect_scores() {
     list<vector<float>> scores_all = list<vector<float>>();
 
     // collect raw scores for all sequences
-    for (Sequence& seq : _list) {
+    for (Sequence* seq : _list) {
         scores_all.push_back(vector<float>());
         for (Scorer* scorer : scoring_methods)
-            scores_all.back().push_back((*scorer)(seq));
+            scores_all.back().push_back((*scorer)(*seq));
     }
 
     // normalize scores
@@ -211,15 +216,13 @@ SequenceContainer& SequenceContainer::collect_scores() {
     // collect overall score from single methods
     auto score = scores_all.begin();
     // v-- because nested typedef is const iterator and we modify here!
-    list<Sequence>::iterator seq = _list.begin();
+    list<Sequence*>::iterator seq = _list.begin();
     while (score != scores_all.end() || seq != _list.end()) {
         float cumul_score = 0;
-        for (vector<float>::iterator s = score->begin();
-                s != score->end();
-                ++s)
+        for (auto s = score->begin(); s != score->end(); ++s)
             cumul_score += *s;
         cumul_score /= scoring_methods.size();
-        seq->set_score(cumul_score);
+        (*seq)->set_score(cumul_score);
         ++seq;
         ++score;
     }
@@ -233,30 +236,39 @@ SequenceContainer& SequenceContainer::get_topranking() {
     // was equal. if it was equal, the sequence we're looking
     // at needs to be removed as well.
     auto remove_others =
-        [this](const WordToken& tok, const Sequence& seq) -> bool {
-        bool equals = false;
-        for (Sequence* other_seq : tok.get_sequences()) {
-            if (other_seq->get_score() == seq.get_score())
-                equals = true;
-            if (other_seq->get_score() <= seq.get_score()) {
-                _list.remove(*other_seq);
-                tok.remove_from(other_seq);
+        [&](const WordToken& tok, const Sequence* seq) -> bool {
+            bool equals = false;
+            auto other_seq = tok.get_sequences()->begin();
+            while (other_seq != tok.get_sequences()->end()) {
+                if (*other_seq == seq) {
+                    ++other_seq;
+                    continue;
+                }
+                if ((*other_seq)->get_score() == seq->get_score())
+                    equals = true;
+                if ((*other_seq)->get_score() <= seq->get_score()) {
+                    auto seq_to_remove = other_seq;
+                    ++other_seq;
+                    _list.remove(*seq_to_remove);
+                    tok.remove_from(*seq_to_remove);
+                    if (tok.get_sequences()->size() == 0)
+                        break;
+                } else
+                    ++other_seq;
             }
-        }
-        return equals;
-    };
+            return equals;
+        };
 
-    for (list<Sequence>::iterator seq = _list.begin();
-         seq != _list.end(); ++seq) {
-        if (seq->length() <= 2) {
+    for (auto seq = _list.begin(); seq != _list.end(); ++seq) {
+        if ((*seq)->length() <= 2) {
             seq = _list.erase(seq);
             continue;
         }
         bool delete_me = false;
-        for (const Pair& p : *seq) {
-            if (!remove_others(p.target(), *seq))
+        for (const Pair& p : **seq) {
+            if (remove_others(p.target(), *seq))
                 delete_me = true;
-            if (!remove_others(p.source(), *seq))
+            if (remove_others(p.source(), *seq))
                 delete_me = true;
         }
         if (delete_me)
@@ -271,8 +283,8 @@ const SequenceContainer& SequenceContainer::reverse() {
         ->get_dictionary(_dict->get_f()->filename(),
                          _dict->get_e()->filename());
 
-    for (Sequence& seq : _list)
-        seq.reverse();
+    for (Sequence* seq : _list)
+        seq->reverse();
 
     return *this;
 }
@@ -282,13 +294,13 @@ const SequenceContainer& SequenceContainer::merge(const
     if (this->_dict != that._dict)
         throw runtime_error("Dictionaries don't match - aborting merge");
 
-    list<Sequence>::iterator this_seq = this->_list.begin();
+    list<Sequence*>::iterator this_seq = this->_list.begin();
 
     for (iterator that_seq = that.begin();
          that_seq != that.end(); ++that_seq) {
-        while (this_seq->slot() < that_seq->slot())
+        while ((*this_seq)->slot() < (*that_seq)->slot())
             ++this_seq;
-        while (this_seq->slot() == that_seq->slot()) {
+        while ((*this_seq)->slot() == (*that_seq)->slot()) {
             if (*this_seq == *that_seq)
                 break;
             ++this_seq;

@@ -86,13 +86,13 @@ Sequence::Sequence(const Dictionary& dict) {
 }
 
 Sequence::Sequence(const Dictionary& dict, const Pair& p) {
-    _length = 1;
+    _length = 0;
     _dict = &dict;
     this->add(p);
 }
 
 Sequence::Sequence(const Dictionary& dict, const Pair& p1, const Pair& p2) {
-    _length = 2;
+    _length = 0;
     _dict = &dict;
     this->add(p1);
     this->add(p2);
@@ -126,8 +126,11 @@ bool Sequence::add_if_close(const Pair& p) {
 
 void Sequence::merge(const Sequence& that) {
     for (Sequence::iterator pp = that._list.begin();
-            pp != that._list.end(); ++pp)
-        this->_list.push_back(*pp);
+            pp != that._list.end(); ++pp) {
+        this->add(*pp);
+        pp->target().remove_from(const_cast<Sequence*>(&that));
+        pp->source().remove_from(const_cast<Sequence*>(&that));
+    }
     _back_slot = _list.back().slot();
     _length += that.length();
 }
@@ -151,6 +154,8 @@ int Sequence::back_slot() const
     //{ return _list.back().slot(); }
 
 bool Sequence::operator==(const Sequence& that) const {
+    if (this->length() != that.length())
+        return false;
     auto this_it = this->begin(),
          that_it = that.begin();
     while (this_it != this->end() && that_it != that.end()) {

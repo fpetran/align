@@ -76,7 +76,7 @@ class Sequence {
         Sequence::iterator end() const;
 
     private:
-        Sequence();
+        Sequence() = delete;
         //< if this is accidentally used, lots of data members
         //< will go uninitialized
 

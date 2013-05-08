@@ -43,6 +43,7 @@ class WordToken : public Word {
     friend class Text;
     friend class Pair;
     public:
+        ~WordToken() {};
         inline const string_impl& get_str() const {
             return *_string_realization;
         }
@@ -61,32 +62,34 @@ class WordToken : public Word {
         }
 
         inline bool close_to(const WordToken& other) const {
-            return
-                abs(this->_position - other._position)
-              < Params::get()->closeness();
+            return this->_position != other._position
+                && abs(this->_position - other._position)
+                   <= Params::get()->closeness();
         }
 
         inline void add_to_sequence(Sequence* seq) const {
-            _sequences.push_back(seq);
+            _sequences->push_back(seq);
         }
 
-        inline std::list<Sequence*>& get_sequences() const {
+        inline std::list<Sequence*>* get_sequences() const {
             return _sequences;
         }
 
-        inline void remove_from(Sequence* seq) const {
-            _sequences.remove(seq);
-        }
+        void remove_from(const Sequence* seq) const;
 
     protected:
-        WordToken(const Text*, const string_impl*, int, const WordType*);
+        WordToken(const Text* txt,
+                  std::list<Sequence*>* seqs,
+                  const string_impl* str,
+                  int pos,
+                  const WordType* type);
         WordToken();
 
     private:
         int _position;
         const WordType* _type;
         const string_impl* _string_realization;
-        mutable std::list<Sequence*> _sequences;
+        mutable std::list<Sequence*> *_sequences;
 };
 
 /**
