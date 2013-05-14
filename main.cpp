@@ -77,24 +77,6 @@ int main(int argc, char* argv[]) {
         Candidates c(*dict);
         c.collect();
 
-        /*
-        static char out[256];
-        for (auto cand = c.begin(); cand != c.end(); ++cand) {
-            if (cand->second.empty())
-                continue;
-            out[cand->first.get_str().extract(0, 99, out)] = 0;
-            std::cout << cand->first.position() 
-                      << " (" << out << ") "
-                      << " - ";
-            for (auto tr = cand->second.begin(); tr != cand->second.end(); ++tr) {
-                out[tr->get_str().extract(0, 99, out)] = 0;
-                std::cout << tr->position()
-                          << " (" << out << ") ";
-            }
-            std::cout << std::endl;
-        }
-        */
-
         SequenceContainer sc(&c);
         sc.initial_sequences()
           .expand_sequences();
@@ -104,18 +86,23 @@ int main(int argc, char* argv[]) {
         SequenceContainer rsc(&rc);
         rsc.initial_sequences()
            .expand_sequences();
-
-        sc.merge(rsc.reverse());
+        Hypothesis  *rresult = rsc.get_result(),
+                    *result = sc.get_result();
+        rresult->reverse();
+        result->munch(rresult);
 
         sc.merge_sequences()
-          .collect_scores()
-          .get_topranking();
+          .collect_scores();
+        sc.get_topranking();
 
-        for (const Sequence& seq : sc)
-            for (const Pair& pair : seq)
-                std::cout
-                    << pair.slot() << " - " << pair.target_slot()
-                    << std::endl;
+        for (Sequence* seq : *result) {
+            std::cout << "{ ";
+            for (const Pair& pair : *seq)
+                std::cout << pair;
+            std::cout << " }"
+                << " Length: " << seq->length()
+                << std::endl;
+        }
     }
     catch(std::runtime_error e) {
         std::cerr << e.what() << std::endl;

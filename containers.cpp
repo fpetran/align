@@ -1,9 +1,12 @@
 // Copyright 2012 Florian Petran
 #include<list>
 #include<map>
+#include<stdexcept>
 
 #include"containers.h"
 #include"params.h"
+
+using std::runtime_error;
 
 /*
  * optimization notes:
@@ -98,6 +101,29 @@ Sequence::Sequence(const Dictionary& dict, const Pair& p1, const Pair& p2) {
     this->add(p2);
     _slot = p1.slot();
 }
+
+Sequence::~Sequence() {
+    for (Pair& p : _list) {
+        p.target().remove_from(this);
+        p.source().remove_from(this);
+    }
+}
+
+const Sequence& Sequence::operator=(const Sequence& that) {
+    _dict = that._dict;
+    for (Pair& p : _list) {
+        p.target().remove_from(this);
+        p.source().remove_from(this);
+    }
+    _length = 0;
+    for (const Pair& p : that) {
+        this->add(p);
+        _slot = p.slot();
+        ++_length;
+    }
+    return *this;
+}
+
 
 void Sequence::add(const Pair& p) {
     if (_length == 0)
@@ -196,3 +222,107 @@ const Pair& Sequence::last_pair() const {
     return _list.back();
 }
 
+///////////////////////////////// Hypothesis ///////////////////////////////////
+
+Hypothesis::Hypothesis(const Dictionary& d) {
+    _dict = &d;
+}
+
+Hypothesis::~Hypothesis() {
+    for (Sequence* seq : _sequences)
+        delete seq;
+}
+
+Hypothesis::Hypothesis() {}
+
+Hypothesis::Hypothesis(const Hypothesis& that) {
+    this->_dict = that._dict;
+    this->_sequences = that._sequences;
+}
+
+const Hypothesis& Hypothesis::operator=(const Hypothesis& that) {
+    for (Sequence* seq : _sequences)
+        delete seq;
+    this->_dict = that._dict;
+    this->_sequences = that._sequences;
+    return *this;
+}
+
+Sequence* Hypothesis::new_sequence(const Pair& p) {
+    Sequence* seq = new Sequence(*_dict, p);
+    _sequences.push_back(seq);
+    return seq;
+}
+
+Hypothesis::iterator Hypothesis::remove_sequence(Hypothesis::iterator pos) {
+    if (pos == _sequences.end())
+        return pos;
+    Sequence* seq = *pos;
+    delete seq;
+    Hypothesis::iterator newpos = _sequences.erase(pos);
+    return newpos;
+}
+
+Hypothesis::iterator Hypothesis::remove_sequence(Sequence* seq) {
+    Hypothesis::iterator pos;
+    for (pos = _sequences.begin(); pos != _sequences.end(); ++pos)
+        if (*pos == seq)
+            break;
+    return this->remove_sequence(pos);
+}
+
+const Hypothesis& Hypothesis::reverse() {
+    _dict = DictionaryFactory::get_instance()
+            ->get_dictionary(_dict->get_f()->filename(),
+                             _dict->get_e()->filename());
+    for (Sequence* seq : _sequences)
+        seq->reverse();
+
+    return *this;
+}
+
+const Hypothesis& Hypothesis::munch(Hypothesis *that) {
+    if (this->_dict != that->_dict)
+        throw runtime_error("Dictionaries don't match - aborting merge");
+
+    auto this_seq = this->begin();
+    for (auto that_seq = that->begin();
+         that_seq != that->end();
+         ++that_seq) {
+        while ((*this_seq)->slot() < (*that_seq)->slot())
+            ++this_seq;
+        while ((*this_seq)->slot() == (*that_seq)->slot()) {
+            if (*this_seq == *that_seq)
+                break;
+            ++this_seq;
+        }
+        if (*this_seq == *that_seq)
+            continue;
+        _sequences.insert(++this_seq, *that_seq);
+    }
+
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& strm, const Pair& pair) {
+    string_impl tstr = pair.target().get_str(),
+                sstr = pair.source().get_str();
+    std::string source = to_cstr(sstr),
+                target = to_cstr(tstr);
+
+    strm << "[ "
+         << pair.slot() << " (" << source << ") -- "
+         << pair.target_slot() << " (" << target << ") ] ";
+    return strm;
+}
+
+// TODO(fpetran)
+// this segfaults when calling list<WordToken>::empty() for
+// reasons that aren't entirely clear to me
+std::ostream& operator<<(std::ostream& strm, const Sequence& seq) {
+    strm << "{ ";
+    for (const Pair& pair : seq)
+        strm << pair;
+    strm << " }";
+    return strm;
+}

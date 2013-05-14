@@ -48,32 +48,15 @@ class Candidates {
         const Dictionary* _dict;
 };
 
-// turns out I just misunderstood how strongly typed enums are
-// supposed to be used, so let's all forget I ever blamed gcc
-enum class BreakAfterPhase {
-    Initial,
-    Expand,
-    Merge,
-    Never
-};
-
 class SequenceContainer {
     public:
         explicit SequenceContainer(Candidates*);
-        ~SequenceContainer();
 
         SequenceContainer() = delete;
         SequenceContainer(const SequenceContainer&) = delete;
         const SequenceContainer&
             operator=(const SequenceContainer&) = delete;
 
-        void make(const BreakAfterPhase = BreakAfterPhase::Never);
-        // TODO(fpetran):
-        // find another way to ensure the correct sequence
-        // of steps. the latter part of the sequence can be
-        // varied, and the reverse sequences step occurs before
-        // the merge step and should take place outside of the
-        // SC
         SequenceContainer& initial_sequences();
         //< construct initial bigrams of pairs
         SequenceContainer& expand_sequences();
@@ -82,17 +65,12 @@ class SequenceContainer {
         SequenceContainer& collect_scores();
         SequenceContainer& get_topranking();
 
-        typedef std::list<Sequence*>::const_iterator iterator;
-
-        const SequenceContainer& reverse();
-        const SequenceContainer& merge(const SequenceContainer&);
-
-        SequenceContainer::iterator begin() const;
-        SequenceContainer::iterator end() const;
-        inline int length() { return _list.size(); }
+        inline Hypothesis* get_result() {
+            return &hypothesis;
+        }
 
     private:
-        std::list<Sequence*> _list;
+        Hypothesis hypothesis;
 
         Params* params;
         Candidates* _candidates;

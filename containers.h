@@ -6,10 +6,16 @@
 #include<list>
 #include<map>
 
+#include<iostream>
+#include<string>
+
 #include"text.h"
 #include"dictionary.h"
 #include"params.h"
 
+/**
+ * An aligned pair of WordTokens in e and f texts.
+ */
 class Pair {
     public:
         bool targets_close(const Pair&) const;
@@ -32,13 +38,25 @@ class Pair {
         WordToken _source, _target;
 };
 
+class Hypothesis;
+
+/**
+ * An aligned sequence of pairs
+ */
 class Sequence {
+    friend class Hypothesis;
     public:
         explicit Sequence(const Dictionary&);
         Sequence(const Dictionary&, const Pair&);
         //< construct an initial Sequence over two texts from one pair
         Sequence(const Dictionary&, const Pair&, const Pair&);
         //< construct a Sequence over two pairs
+
+        Sequence() = delete;
+        //< if this is accidentally used, lots of data members
+        //< will go uninitialized
+        Sequence(const Sequence&);
+        const Sequence& operator=(const Sequence&);
 
         void add(const Pair&);
         //< add a pair to the sequence
@@ -74,12 +92,12 @@ class Sequence {
 
         Sequence::iterator begin() const;
         Sequence::iterator end() const;
+    protected:
+        ~Sequence();
+        //< only hypothesis may call the dtor, because it
+        //< owns the pointers
 
     private:
-        Sequence() = delete;
-        //< if this is accidentally used, lots of data members
-        //< will go uninitialized
-
         std::list<Pair> _list;
         const Dictionary* _dict;
 
@@ -91,6 +109,57 @@ class Sequence {
         mutable int _length;
 };
 
+/**
+ * an alignment hypothesis consisting of multiple sequences.
+ *
+ * what this class needs to do:
+ * - add and remove sequences
+ * - iterate over sequences
+ * - track/own sequence pointers on the heap stored for the WordToken
+ * - reverse e/f direction
+ * - merge with another hypothesis
+ */
+class Hypothesis {
+    public:
+        explicit Hypothesis(const Dictionary& d);
+        ~Hypothesis();
+        Hypothesis();
+        Hypothesis(const Hypothesis&);
+        const Hypothesis& operator=(const Hypothesis&);
 
+        inline void set_dict(const Dictionary& d) {
+            _dict = &d;
+        };
+
+        typedef std::list<Sequence*>::iterator iterator;
+        typedef std::list<Sequence*>::const_iterator const_iterator;
+        inline iterator begin() {
+            return _sequences.begin();
+        };
+        inline const_iterator cbegin() const {
+            return _sequences.cbegin();
+        };
+        inline iterator end() {
+            return _sequences.end();
+        };
+        inline const_iterator cend() const {
+            return _sequences.cend();
+        }
+
+        Sequence* new_sequence(const Pair& p);
+        iterator remove_sequence(iterator pos);
+        iterator remove_sequence(Sequence* seq);
+
+        const Hypothesis& reverse();
+        const Hypothesis& munch(Hypothesis* other);
+        //< munch up another hypothesis, adding all sequence
+        //< to this and removing them from the other hypothesis
+    private:
+        const Dictionary* _dict;
+        std::list<Sequence*> _sequences;
+};
+
+std::ostream& operator<<(std::ostream& strm, const Pair& pair);
+std::ostream& operator<<(std::ostream& strm, const Sequence& seq);
 
 #endif // ALIGN_CONTAINERS_HH
