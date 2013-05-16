@@ -316,9 +316,6 @@ std::ostream& operator<<(std::ostream& strm, const Pair& pair) {
     return strm;
 }
 
-// TODO(fpetran)
-// this segfaults when calling list<WordToken>::empty() for
-// reasons that aren't entirely clear to me
 std::ostream& operator<<(std::ostream& strm, const Sequence& seq) {
     strm << "{ ";
     for (const Pair& pair : seq)

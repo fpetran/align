@@ -46,18 +46,9 @@ class Hypothesis;
 class Sequence {
     friend class Hypothesis;
     public:
-        explicit Sequence(const Dictionary&);
-        Sequence(const Dictionary&, const Pair&);
-        //< construct an initial Sequence over two texts from one pair
-        Sequence(const Dictionary&, const Pair&, const Pair&);
-        //< construct a Sequence over two pairs
-
         Sequence() = delete;
         //< if this is accidentally used, lots of data members
         //< will go uninitialized
-        Sequence(const Sequence&);
-        const Sequence& operator=(const Sequence&);
-
         void add(const Pair&);
         //< add a pair to the sequence
         bool add_if_close(const Pair&);
@@ -93,6 +84,13 @@ class Sequence {
         Sequence::iterator begin() const;
         Sequence::iterator end() const;
     protected:
+        explicit Sequence(const Dictionary&);
+        Sequence(const Dictionary&, const Pair&);
+        //< construct an initial Sequence over two texts from one pair
+        Sequence(const Dictionary&, const Pair&, const Pair&);
+        //< construct a Sequence over two pairs
+        Sequence(const Sequence&);
+        const Sequence& operator=(const Sequence&);
         ~Sequence();
         //< only hypothesis may call the dtor, because it
         //< owns the pointers
@@ -109,8 +107,11 @@ class Sequence {
         mutable int _length;
 };
 
+class SequenceContainer;
+
 /**
  * an alignment hypothesis consisting of multiple sequences.
+ * also the Sequence factory.
  *
  * what this class needs to do:
  * - add and remove sequences
@@ -120,17 +121,8 @@ class Sequence {
  * - merge with another hypothesis
  */
 class Hypothesis {
+    friend class SequenceContainer;
     public:
-        explicit Hypothesis(const Dictionary& d);
-        ~Hypothesis();
-        Hypothesis();
-        Hypothesis(const Hypothesis&);
-        const Hypothesis& operator=(const Hypothesis&);
-
-        inline void set_dict(const Dictionary& d) {
-            _dict = &d;
-        };
-
         typedef std::list<Sequence*>::iterator iterator;
         typedef std::list<Sequence*>::const_iterator const_iterator;
         inline iterator begin() {
@@ -154,6 +146,17 @@ class Hypothesis {
         const Hypothesis& munch(Hypothesis* other);
         //< munch up another hypothesis, adding all sequence
         //< to this and removing them from the other hypothesis
+    protected:
+        explicit Hypothesis(const Dictionary& d);
+        ~Hypothesis();
+        Hypothesis();
+        Hypothesis(const Hypothesis&);
+        const Hypothesis& operator=(const Hypothesis&);
+
+        inline void set_dict(const Dictionary& d) {
+            _dict = &d;
+        };
+
     private:
         const Dictionary* _dict;
         std::list<Sequence*> _sequences;
