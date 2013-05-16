@@ -305,14 +305,9 @@ const Hypothesis& Hypothesis::munch(Hypothesis *that) {
 }
 
 std::ostream& operator<<(std::ostream& strm, const Pair& pair) {
-    string_impl tstr = pair.target().get_str(),
-                sstr = pair.source().get_str();
-    std::string source = to_cstr(sstr),
-                target = to_cstr(tstr);
-
     strm << "[ "
-         << pair.slot() << " (" << source << ") -- "
-         << pair.target_slot() << " (" << target << ") ] ";
+         << pair.slot() << " (" << pair.source().get_str() << ") -- "
+         << pair.target_slot() << " (" << pair.target().get_str() << ") ] ";
     return strm;
 }
 
