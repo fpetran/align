@@ -66,11 +66,11 @@ class SequenceContainer {
         SequenceContainer& get_topranking();
 
         inline Hypothesis* get_result() {
-            return &hypothesis;
+            return hypothesis;
         }
 
     private:
-        Hypothesis hypothesis;
+        Hypothesis* hypothesis;
 
         Params* params;
         Candidates* _candidates;
@@ -79,6 +79,5 @@ class SequenceContainer {
         ScoringMethods scoring_methods;
         //< contains all scoring methods as functors
 };
-
 
 #endif // ALIGN_ALIGN_HH

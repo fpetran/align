@@ -149,9 +149,9 @@ class Hypothesis {
     protected:
         explicit Hypothesis(const Dictionary& d);
         ~Hypothesis();
-        Hypothesis();
-        Hypothesis(const Hypothesis&);
-        const Hypothesis& operator=(const Hypothesis&);
+        Hypothesis() = delete;
+        Hypothesis(const Hypothesis&) = delete;
+        const Hypothesis& operator=(const Hypothesis&) = delete;
 
         inline void set_dict(const Dictionary& d) {
             _dict = &d;

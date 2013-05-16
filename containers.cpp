@@ -233,21 +233,6 @@ Hypothesis::~Hypothesis() {
         delete seq;
 }
 
-Hypothesis::Hypothesis() {}
-
-Hypothesis::Hypothesis(const Hypothesis& that) {
-    this->_dict = that._dict;
-    this->_sequences = that._sequences;
-}
-
-const Hypothesis& Hypothesis::operator=(const Hypothesis& that) {
-    for (Sequence* seq : _sequences)
-        delete seq;
-    this->_dict = that._dict;
-    this->_sequences = that._sequences;
-    return *this;
-}
-
 Sequence* Hypothesis::new_sequence(const Pair& p) {
     Sequence* seq = new Sequence(*_dict, p);
     _sequences.push_back(seq);
@@ -313,8 +298,9 @@ std::ostream& operator<<(std::ostream& strm, const Pair& pair) {
 
 std::ostream& operator<<(std::ostream& strm, const Sequence& seq) {
     strm << "{ ";
-    for (const Pair& pair : seq)
+    for (const Align::Pair& pair : seq)
         strm << pair;
     strm << " }";
     return strm;
 }
+
