@@ -10,6 +10,8 @@
 
 #include"text.h"
 
+namespace Align {
+
 class Dictionary;
 
 /**
@@ -24,12 +26,12 @@ class DictionaryFactory {
         static DictionaryFactory* get_instance();
         const Dictionary* get_dictionary(const std::string&,
                                          const std::string&);
-        //< read a dictionary from the file if its first requested,
-        //< otherwise just return the pointer to the dictionary entry
+        //!< read a dictionary from the file if its first requested,
+        //!< otherwise just return the pointer to the dictionary entry
 
         Text* get_text(const std::string&);
-        //< create a new text with the given file name on first request,
-        //< or just return the text pointer otherwise
+        //!< create a new text with the given file name on first request,
+        //!< or just return the text pointer otherwise
 
         ~DictionaryFactory();
     private:
@@ -67,17 +69,17 @@ class Dictionary {
     friend class DictionaryFactory;
     public:
         const std::list<WordType>& lookup(const WordToken&) const;
-        //< look up a WordToken, and get a list to its translations
-        //< translations may be multiple types which might in turn
-        //< have multiple locations in the target file
+        //!< look up a WordToken, and get a list to its translations
+        //!< translations may be multiple types which might in turn
+        //!< have multiple locations in the target file
 
         bool has(const WordToken&) const;
-        //< check if the dictionary has an entry for word
+        //!< check if the dictionary has an entry for word
 
         inline const Text* get_e() const { return _e; }
-        //< return the source text for this dictionary
+        //!< return the source text for this dictionary
         inline const Text* get_f() const { return _f; }
-        //< return the target text for this dictionary
+        //!< return the target text for this dictionary
 
     protected:
         explicit Dictionary(const std::string&);
@@ -100,8 +102,9 @@ class Dictionary {
         Text *_e, *_f;
         std::map<WordType, std::list<WordType>> _storage;
         const std::list<WordType> empty_entry;
-        //< an empty dictionary entry
+        //!< an empty dictionary entry
 };
+}
 
-#endif
+#endif  // ALIGN_DICTIONARY_HH
 

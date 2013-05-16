@@ -17,6 +17,8 @@ using std::list;
 using std::map;
 using std::runtime_error;
 
+namespace Align {
+
 ////////////////////////// DictionaryFactory //////////////////////////////////
 
 DictionaryFactory* DictionaryFactory::_instance = new DictionaryFactory();
@@ -200,3 +202,5 @@ bool Dictionary::has(const WordToken& lemma) const {
 
     return _storage.count(lemma.get_type()) >= 1;
 }
+}
+

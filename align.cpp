@@ -19,6 +19,7 @@ using std::vector;
 using std::pair;
 using std::runtime_error;
 
+namespace Align {
 //////////////////////////// Candidates ///////////////////////////////////////
 
 Candidates::Candidates(const Dictionary& dict) {
@@ -155,7 +156,7 @@ SequenceContainer& SequenceContainer::merge_sequences() {
                 ++other;
 
             if (other == hypothesis->end())
-                continue; // break instead?
+                continue;
 
             if ((*seq)->last_pair().both_close((*other)->first_pair())) {
                 (*seq)->merge(**other);
@@ -249,5 +250,6 @@ SequenceContainer& SequenceContainer::get_topranking() {
     }
 
     return *this;
+}
 }
 

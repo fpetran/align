@@ -13,6 +13,8 @@
 #include"dictionary.h"
 #include"params.h"
 
+namespace Align {
+
 /**
  * An aligned pair of WordTokens in e and f texts.
  */
@@ -47,22 +49,22 @@ class Sequence {
     friend class Hypothesis;
     public:
         Sequence() = delete;
-        //< if this is accidentally used, lots of data members
-        //< will go uninitialized
+        //!< if this is accidentally used, lots of data members
+        //!< will go uninitialized
         void add(const Pair&);
-        //< add a pair to the sequence
+        //!< add a pair to the sequence
         bool add_if_close(const Pair&);
-        //< add a pair if its target is close to our last target,
-        //< return whether it was added or not
+        //!< add a pair if its target is close to our last target,
+        //!< return whether it was added or not
         void merge(const Sequence&);
-        //< merge another sequence to this
+        //!< merge another sequence to this
         const Sequence& reverse();
-        //< reverse e and f
+        //!< reverse e and f
 
         int slot() const;
-        //< starting slot of the sequence
+        //!< starting slot of the sequence
         int back_slot() const;
-        //< slot of the last pair in the sequence
+        //!< slot of the last pair in the sequence
 
         int length() const;
 
@@ -73,8 +75,8 @@ class Sequence {
         bool operator==(const Sequence&) const;
         bool has_target(int target_position);
         bool has_target(const Pair&);
-        //< checks if a target index is already in
-        //< the sequence. POTENTIALLY EXPENSIVE
+        //!< checks if a target index is already in
+        //!< the sequence. POTENTIALLY EXPENSIVE
 
         const Pair& first_pair() const;
         const Pair& last_pair() const;
@@ -83,17 +85,18 @@ class Sequence {
 
         Sequence::iterator begin() const;
         Sequence::iterator end() const;
+
     protected:
         explicit Sequence(const Dictionary&);
         Sequence(const Dictionary&, const Pair&);
-        //< construct an initial Sequence over two texts from one pair
+        //!< construct an initial Sequence over two texts from one pair
         Sequence(const Dictionary&, const Pair&, const Pair&);
-        //< construct a Sequence over two pairs
+        //!< construct a Sequence over two pairs
         Sequence(const Sequence&);
         const Sequence& operator=(const Sequence&);
         ~Sequence();
-        //< only hypothesis may call the dtor, because it
-        //< owns the pointers
+        //!< only hypothesis may call the dtor, because it
+        //!< owns the pointers
 
     private:
         std::list<Pair> _list;
@@ -161,8 +164,10 @@ class Hypothesis {
         const Dictionary* _dict;
         std::list<Sequence*> _sequences;
 };
+}
 
-std::ostream& operator<<(std::ostream& strm, const Pair& pair);
-std::ostream& operator<<(std::ostream& strm, const Sequence& seq);
+std::ostream& operator<<(std::ostream& strm, const Align::Pair& pair);
+std::ostream& operator<<(std::ostream& strm, const Align::Sequence& seq);
 
-#endif // ALIGN_CONTAINERS_HH
+#endif  // ALIGN_CONTAINERS_HH
+

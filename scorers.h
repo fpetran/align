@@ -5,6 +5,8 @@
 #include<vector>
 #include"containers.h"
 
+namespace Align {
+
 class Scorer;
 
 /**
@@ -21,7 +23,7 @@ class ScoringMethods : public std::vector<Scorer*> {
         ScoringMethods(const ScoringMethods&);
         const ScoringMethods& operator=(const ScoringMethods&);
         void push_back(Scorer*); // NOLINT[readability/function]
-        //< private to prevent clients from adding methods
+        //!< private to prevent clients from adding methods
 };
 
 /**
@@ -37,13 +39,13 @@ class ScoringMethods : public std::vector<Scorer*> {
  * cpplint.py thinks.
  *
  **/
-class Scorer {
+class Scorer { // NOLINT[runtime/virtual]
     public:
         Scorer();
         virtual float operator()(const Sequence&) = 0;
         virtual float get_max();
-        //< returns the maximum value for this score over all sequences
-        //< seen so far
+        //!< returns the maximum value for this score over all sequences
+        //!< seen so far
         virtual const char* name() = 0;
     protected:
         float _max;
@@ -78,5 +80,7 @@ class BisimScorer : public Scorer {
         return "bi_sim";
     }
 };
+}
 
-#endif // ALIGN_SCORERS_HH
+#endif  // ALIGN_SCORERS_HH
+

@@ -76,8 +76,8 @@ inline const char* to_cstr(const string_impl& str) {
     return str.c_str();
 }
 
-#endif // ALIGN_HAS_UCI_STRING
+#endif  // ALIGN_HAS_UCI_STRING
 
 bool has_alpha(const string_impl& str);
 
-#endif // ALIGN_STRING_IMPL_H
+#endif  // ALIGN_STRING_IMPL_H

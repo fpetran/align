@@ -9,6 +9,8 @@
 
 using std::vector;
 
+namespace Align {
+
 ScoringMethods::ScoringMethods() {
     // register all scoring methods here
     this->push_back(new LengthScorer);
@@ -27,7 +29,6 @@ ScoringMethods::~ScoringMethods() {
 }
 
 void ScoringMethods::push_back(Scorer* s) {
-    //dynamic_cast<vector<Scorer*>*>(this)->push_back(s);
     vector<Scorer*>::push_back(s);
 }
 
@@ -73,5 +74,6 @@ float BisimScorer::operator()(const Sequence& seq) {
     _max = (_max > result) ? _max : result;
 
     return result;
+}
 }
 

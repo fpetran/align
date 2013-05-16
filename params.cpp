@@ -4,10 +4,15 @@
 
 using std::string;
 
+namespace Align {
+
 Params* Params::_instance = new Params;
 
 Params::Params()
-    : _closeness(2), _max_skip(1), _dict_base(".") {}
+    : _closeness(2),
+      _max_skip(1),
+      _dict_base(".")
+    {}
 
 Params* Params::get() {
     return _instance;
@@ -16,9 +21,11 @@ Params* Params::get() {
 int Params::closeness() {
     return _closeness;
 }
+
 void Params::set_closeness(int what) {
     _closeness = what;
 }
+
 void Params::set_max_skip(int what) {
     _max_skip = what;
 }
@@ -30,5 +37,6 @@ int Params::max_skip() {
 }
 const string& Params::dict_base() {
     return _dict_base;
+}
 }
 

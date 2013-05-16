@@ -3,6 +3,8 @@
 #define ALIGN_PARAMS_HH
 #include<string>
 
+namespace Align {
+
 /**
  * this holds parameters such as max_candidate_skip
  * and whatnot.
@@ -16,10 +18,11 @@ class Params {
         static Params* get();
 
         int max_skip();
-        void set_max_skip(int value);
         int closeness();
-        void set_closeness(int value);
         const std::string& dict_base();
+
+        void set_max_skip(int value);
+        void set_closeness(int value);
         void set_dict_base(const std::string& dirname);
 
     private:
@@ -29,7 +32,9 @@ class Params {
         int  _closeness;
         int _max_skip;
         std::string _dict_base;
-        //< base directory for dictionaries
+        //!< base directory for dictionaries
 };
+}
 
-#endif // ALIGN_PARAMS_HH
+#endif  // ALIGN_PARAMS_HH
+

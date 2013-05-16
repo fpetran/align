@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
           po::value<int>(&skip)->default_value(ALIGN_DEFAULT_MAX_SKIP),
           "max skip value")
         ("dictionary,D",
-          po::value<std::string>(&dict_base),
+          po::value<std::string>(&dict_base)->default_value("."),
           "base directory for dictionaries")
         ;
     // call a function
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
     // TODO(fpetran) make config file name variable
     //po::store(po::parse_config_file("align.cfg", desc), m);
     po::notify(m);
-    Params* par = Params::get();
+    Align::Params* par = Align::Params::get();
 
     if (m.count("skip"))
         par->set_max_skip(skip);
@@ -72,21 +72,21 @@ int main(int argc, char* argv[]) {
         std::string e_name = m["source"].as<std::string>(),
                     f_name = m["target"].as<std::string>();
 
-        DictionaryFactory* df = DictionaryFactory::get_instance();
-        const Dictionary* dict = df->get_dictionary(e_name, f_name);
-        Candidates c(*dict);
+        Align::DictionaryFactory* df = Align::DictionaryFactory::get_instance();
+        const Align::Dictionary* dict = df->get_dictionary(e_name, f_name);
+        Align::Candidates c(*dict);
         c.collect();
 
-        SequenceContainer sc(&c);
+        Align::SequenceContainer sc(&c);
         sc.initial_sequences()
           .expand_sequences();
 
-        const Dictionary* rdict = df->get_dictionary(f_name, e_name);
-        Candidates rc(*rdict);
-        SequenceContainer rsc(&rc);
+        const Align::Dictionary* rdict = df->get_dictionary(f_name, e_name);
+        Align::Candidates rc(*rdict);
+        Align::SequenceContainer rsc(&rc);
         rsc.initial_sequences()
            .expand_sequences();
-        Hypothesis *result  = sc.get_result(),
+        Align::Hypothesis *result  = sc.get_result(),
                    *rresult = rsc.get_result();
         rresult->reverse();
         result->munch(rresult);
@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
           .collect_scores()
           .get_topranking();
 
-        for (Sequence* seq : *result)
+        for (Align::Sequence* seq : *result)
             std::cout << *seq << std::endl;
     }
     catch(std::runtime_error e) {

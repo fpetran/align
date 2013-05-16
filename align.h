@@ -14,6 +14,8 @@
 #include"containers.h"
 #include"scorers.h"
 
+namespace Align {
+
 class Candidates {
     friend class SequenceContainer;
     public:
@@ -25,7 +27,7 @@ class Candidates {
         const Candidates& operator=(const Candidates&) = delete;
 
         void collect();
-        //< collect all translation candidates
+        //!< collect all translation candidates
 
         typedef std::map<WordToken, std::list<WordToken>*>::iterator
             iterator;
@@ -50,7 +52,7 @@ class Candidates {
 
 class SequenceContainer {
     public:
-        explicit SequenceContainer(Candidates*);
+        explicit SequenceContainer(Candidates* cand);
 
         SequenceContainer() = delete;
         SequenceContainer(const SequenceContainer&) = delete;
@@ -58,9 +60,9 @@ class SequenceContainer {
             operator=(const SequenceContainer&) = delete;
 
         SequenceContainer& initial_sequences();
-        //< construct initial bigrams of pairs
+        //!< construct initial bigrams of pairs
         SequenceContainer& expand_sequences();
-        //< expand the sequences at tail end
+        //!< expand the sequences at tail end
         SequenceContainer& merge_sequences();
         SequenceContainer& collect_scores();
         SequenceContainer& get_topranking();
@@ -77,7 +79,9 @@ class SequenceContainer {
         const Dictionary* _dict;
 
         ScoringMethods scoring_methods;
-        //< contains all scoring methods as functors
+        //!< contains all scoring methods as functors
 };
+}
 
-#endif // ALIGN_ALIGN_HH
+#endif  // ALIGN_ALIGN_HH
+

@@ -31,6 +31,8 @@ using std::runtime_error;
  *  Problem: back_slot() is const -> cache variable must be mutable
  */
 
+namespace Align {
+
 Pair::Pair(const WordToken& s, const WordToken& t)
     : _source(s), _target(t) {
 }
@@ -56,7 +58,7 @@ const Pair& Pair::reverse() {
 }
 
 bool Pair::targets_close(const Pair& that) const {
-    // TODO parametrize monotony constraint
+    // TODO(fpetran) parametrize monotony constraint
     return
             this->_source.position() != that._source.position()
         &&  this->_source.position() < that._source.position()
@@ -173,11 +175,9 @@ const Sequence& Sequence::reverse() {
 
 int Sequence::slot() const
     { return _slot; }
-    //{ return _list.front().slot(); }
 
 int Sequence::back_slot() const
     { return _back_slot; }
-    //{ return _list.back().slot(); }
 
 bool Sequence::operator==(const Sequence& that) const {
     if (this->length() != that.length())
@@ -288,15 +288,16 @@ const Hypothesis& Hypothesis::munch(Hypothesis *that) {
 
     return *this;
 }
+}
 
-std::ostream& operator<<(std::ostream& strm, const Pair& pair) {
+std::ostream& operator<<(std::ostream& strm, const Align::Pair& pair) {
     strm << "[ "
          << pair.slot() << " (" << pair.source().get_str() << ") -- "
          << pair.target_slot() << " (" << pair.target().get_str() << ") ] ";
     return strm;
 }
 
-std::ostream& operator<<(std::ostream& strm, const Sequence& seq) {
+std::ostream& operator<<(std::ostream& strm, const Align::Sequence& seq) {
     strm << "{ ";
     for (const Align::Pair& pair : seq)
         strm << pair;

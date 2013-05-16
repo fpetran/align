@@ -10,4 +10,5 @@ namespace bi_sim {
     num_ty bi_sim(const String&, const String&);
 }
 
-#endif // BI_SIM_H
+#endif  // BI_SIM_H
+

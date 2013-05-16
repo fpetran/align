@@ -18,6 +18,8 @@ using std::pair;
 using std::out_of_range;
 using std::runtime_error;
 
+namespace Align {
+
 //////////////////////////////// base Word ////////////////////////////////////
 
 Word::Word(const Text* text) {
@@ -133,5 +135,6 @@ void Text::open(const string& fname) {
 
     file.clear();
     file.close();
+}
 }
 
