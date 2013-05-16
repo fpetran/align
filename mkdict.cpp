@@ -1,22 +1,13 @@
 // Copyright 2012-2013 Florian Petran
 #include"mkdict.h"
 
-#include<utility>
 #include<string>
-#include<vector>
 #include<algorithm>
 
-#include<boost/program_options.hpp>
-
-using std::vector;
-using std::pair;
 using std::string;
 using std::ifstream;
 using std::ofstream;
-using std::thread;
 using std::mutex;
-
-namespace po = boost::program_options;
 
 namespace {
 inline bool is_cognate(const string_impl& w1, const string_impl& w2,
@@ -27,6 +18,8 @@ inline bool is_cognate(const string_impl& w1, const string_impl& w2,
             && bi_sim::bi_sim(w1, w2) >= cognate_threshold);
 }
 }
+
+namespace DictionaryInducer {
 
 //////////////////////// Producer /////////////////////////////////////////////
 
@@ -240,82 +233,5 @@ void result_outputter(ResultSet* resultset) {
     index_file.close();
     std::cout << "...done writing!\n";
 }
-
-int main(int argc, char* argv[]) {
-    po::options_description desc
-        (static_cast<std::string>("pAlign v")
-            + ALIGN_VERSION + " dictionary induction\n"
-            + "Allowed options");
-
-    int wordlength_threshold;
-    bi_sim::num_ty cognate_threshold;
-    vector<string> input_files;
-
-    desc.add_options()
-        ("help,h",
-         "display this helpful message")
-        ("wordlength,w",
-         po::value<int>(&wordlength_threshold)
-            ->default_value(DICTIONARY_WORDLENGTH_THRESHOLD),
-         "Cutoff below which words won't be considered for cognates")
-        ("threshold,t",
-         po::value<bi_sim::num_ty>(&cognate_threshold)
-            ->default_value(DICTIONARY_COGNATE_THRESHOLD),
-         "Minimum bi-sim value for two words to be considered cognates")
-        ; //NOLINT
-    po::options_description hidden("Hidden options");
-    hidden.add_options()
-        ("input-file", po::value<vector<string>>(&input_files), "input file");
-    po::positional_options_description p;
-    p.add("input-file", -1);
-    po::options_description cmdline_opts;
-    cmdline_opts.add(desc).add(hidden);
-
-    po::variables_map m;
-    po::store(po::command_line_parser(argc, argv).
-                  options(cmdline_opts).positional(p).run(), m);
-    po::notify(m);
-
-    if (m.count("help")) {
-        std::cout << desc << std::endl;
-        return 0;
-    }
-
-    if (!m.count("input-file") || input_files.size() <= 1) {
-        std::cout << "Error: Not enough input files specified!" << std::endl
-                  << desc << std::endl;
-        return 1;
-    }
-
-    try {
-        FileSet files;
-        ResultSet results;
-
-        for (const string& fname : input_files) {
-            files[fname] = new File();
-            thread(file_reader,
-                   fname, files).detach();
-        }
-
-        for (auto e_name = input_files.begin();
-             e_name != input_files.end(); ++e_name)
-            for (auto f_name = e_name + 1;
-                 f_name != input_files.end(); ++f_name)
-                thread(fileset_processor,
-                       *e_name, *f_name,
-                       files, &results,
-                       wordlength_threshold,
-                       cognate_threshold).detach();
-
-        thread(result_outputter, &results).join();
-
-        for (pair<string, File*> f : files)
-            delete f.second;
-    } catch(std::runtime_error e) {
-        std::cerr << e.what() << std::endl;
-        return 1;
-    }
-
-    return 0;
 }
 

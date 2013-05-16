@@ -1,25 +1,23 @@
 // Copyright 2013 Florian Petran
+//
+// Dictionary induction for use with the alignment.
+// This is independent from the actual alignment code.
 #ifndef ALIGN_MKDICT_HH
 #define ALIGN_MKDICT_HH
 
-#include<cstdlib>
-
 #include<iostream>
 #include<fstream>
-
+#include<string>
 #include<vector>
 #include<queue>
 #include<map>
-#include<string>
-#include<utility>
-
 #include<algorithm>
 #include<thread>
 
 #include"bi-sim.h"
 #include"string_impl.h"
-#include"align_config.h"
 
+namespace DictionaryInducer {
 class Producer {
     public:
         Producer() : notified(false) {}
@@ -74,6 +72,7 @@ void fileset_processor(const std::string& e, const std::string& f,
                        const int wordlength_threshold,
                        const bi_sim::num_ty cognate_threshold);
 
-void results_outputter(ResultSet* results);
+void result_outputter(ResultSet* results);
+}
 
-#endif // ALIGN_MKDICT_HH
+#endif  // ALIGN_MKDICT_HH

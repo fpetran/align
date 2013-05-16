@@ -73,6 +73,8 @@ set(
 include_directories(${ICU_INCLUDE_DIRS} ${PROJECT_BINARY_DIR})
 add_library(bisim ${bisim_SRCS})
 add_library(align ${align_SRCS})
+
+# alignment binary
 add_executable(palign main.cpp )
 target_link_libraries(align bisim)
 target_link_libraries(palign
@@ -80,15 +82,17 @@ target_link_libraries(palign
     ${Boost_LIBRARIES}
     ${ICU_LIBRARIES}
     )
-add_executable(mkdict mkdict.cpp)
-# mkdict needs to link to align for the string stuff
-# that should probably be moved elsewhere
+
+# dictionary induction binary
+add_executable(mkdict mkdict_main.cpp
+                      mkdict.cpp string_impl.cpp
+)
 target_link_libraries(mkdict
     bisim
-    align
     ${Boost_LIBRARIES}
     ${ICU_LIBRARIES}
 )
+
 install(TARGETS palign mkdict DESTINATION ${INSTALL_DESTINATION})
 
 # optional stuff
