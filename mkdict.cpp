@@ -213,7 +213,7 @@ void result_outputter(ResultSet* resultset) {
                    << std::endl;
         file.close();
         dict_cout_mutex.lock();
-        std::cout << "...done writing " 
+        std::cout << "...done writing "
                   << std::to_string(result_id) << "." << std::endl;
         dict_cout_mutex.unlock();
         result_id++;
@@ -231,7 +231,7 @@ void result_outputter(ResultSet* resultset) {
                    << std::endl;
         file.close();
         dict_cout_mutex.lock();
-        std::cout << "...done writing " 
+        std::cout << "...done writing "
                   << std::to_string(result_id) << "." << std::endl;
         dict_cout_mutex.unlock();
         result_id++;
