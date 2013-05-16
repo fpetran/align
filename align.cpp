@@ -65,8 +65,8 @@ SequenceContainer& SequenceContainer::initial_sequences() {
         auto cand2 = cand1; ++cand2;
         int skipped = 0;
         while (skipped <= params->max_skip()
-            && cand2->second->empty()
-            && cand2 != _candidates->end()) {
+            && cand2 != _candidates->end()
+            && cand2->second->empty()) {
             ++skipped;
             ++cand2;
         }

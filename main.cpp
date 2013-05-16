@@ -86,23 +86,17 @@ int main(int argc, char* argv[]) {
         SequenceContainer rsc(&rc);
         rsc.initial_sequences()
            .expand_sequences();
-        Hypothesis  *rresult = rsc.get_result(),
-                    *result = sc.get_result();
+        Hypothesis *result  = sc.get_result(),
+                   *rresult = rsc.get_result();
         rresult->reverse();
         result->munch(rresult);
 
         sc.merge_sequences()
-          .collect_scores();
-        sc.get_topranking();
+          .collect_scores()
+          .get_topranking();
 
-        for (Sequence* seq : *result) {
-            std::cout << "{ ";
-            for (const Pair& pair : *seq)
-                std::cout << pair;
-            std::cout << " }"
-                << " Length: " << seq->length()
-                << std::endl;
-        }
+        for (Sequence* seq : *result)
+            std::cout << *seq << std::endl;
     }
     catch(std::runtime_error e) {
         std::cerr << e.what() << std::endl;
