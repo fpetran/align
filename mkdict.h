@@ -12,7 +12,10 @@
 #include<queue>
 #include<map>
 #include<algorithm>
+
 #include<thread>
+#include<mutex>
+#include<condition_variable>
 
 #include"bi-sim.h"
 #include"string_impl.h"
