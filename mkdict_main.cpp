@@ -4,6 +4,7 @@
 #include<utility>
 #include<string>
 #include<vector>
+#include<stdexcept>
 
 #include"bi-sim.h"
 #include"align_config.h"

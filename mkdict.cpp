@@ -2,6 +2,7 @@
 #include"mkdict.h"
 
 #include<string>
+#include<stdexcept>
 #include<algorithm>
 
 using std::string;

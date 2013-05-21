@@ -2,6 +2,9 @@
 #ifndef ALIGN_PARAMS_HH
 #define ALIGN_PARAMS_HH
 #include<string>
+#include<utility>
+
+#include<boost/program_options.hpp> // NOLINT[build/include_order]
 
 namespace Align {
 
@@ -26,6 +29,8 @@ class Params {
         void set_closeness(int value);
         void set_monotony(bool disabled);
         void set_dict_base(const std::string& dirname);
+
+        std::pair<std::string, std::string> parse(int argc, char* argv[]);
 
     private:
         static Params* _instance;
