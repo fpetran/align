@@ -58,19 +58,11 @@ const Pair& Pair::reverse() {
 }
 
 bool Pair::targets_close(const Pair& that) const {
-    // TODO(fpetran) parametrize monotony constraint
-    return
-            this->_source.position() != that._source.position()
-        &&  this->_source.position() < that._source.position()
-        &&  this->_target.position() < that._target.position()
-        &&     abs(this->_target.position() - that._target.position())
-            <= Params::get()->closeness();
+    return this->_target.close_to(that._target);
 }
 bool Pair::both_close(const Pair& that) const {
-    return
-        this->targets_close(that)
-     && abs(this->_source.position() - that._source.position())
-           <= Params::get()->closeness();
+    return targets_close(that)
+        && this->_source.close_to(that._source);
 }
 
 const WordToken& Pair::source() const { return _source; }
