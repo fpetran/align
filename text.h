@@ -46,6 +46,7 @@ class WordToken : public Word {
     friend class Pair;
     public:
         bool operator==(const WordToken&) const;
+        bool close_to(const WordToken& other) const;
         void remove_from(const Sequence* seq) const;
 
         inline const string_impl& get_str() const {
@@ -62,12 +63,6 @@ class WordToken : public Word {
         }
         inline const WordType& get_type() const {
             return *_type;
-        }
-
-        inline bool close_to(const WordToken& other) const {
-            return this->_position != other._position
-                && abs(this->_position - other._position)
-                   <= Params::get()->closeness();
         }
 
         inline void add_to_sequence(Sequence* seq) const {

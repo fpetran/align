@@ -19,10 +19,12 @@ class Params {
 
         int max_skip();
         int closeness();
+        bool monotony();
         const std::string& dict_base();
 
         void set_max_skip(int value);
         void set_closeness(int value);
+        void set_monotony(bool disabled);
         void set_dict_base(const std::string& dirname);
 
     private:
@@ -30,6 +32,7 @@ class Params {
         Params();
 
         int  _closeness;
+        bool _monotony;
         int _max_skip;
         std::string _dict_base;
         //!< base directory for dictionaries

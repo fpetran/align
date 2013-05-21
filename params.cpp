@@ -10,6 +10,7 @@ Params* Params::_instance = new Params;
 
 Params::Params()
     : _closeness(2),
+      _monotony(false),
       _max_skip(1),
       _dict_base(".")
     {}
@@ -22,10 +23,17 @@ int Params::closeness() {
     return _closeness;
 }
 
+bool Params::monotony() {
+    return _monotony;
+}
+
 void Params::set_closeness(int what) {
     _closeness = what;
 }
 
+void Params::set_monotony(bool disabled) {
+    _monotony = !disabled;
+}
 void Params::set_max_skip(int what) {
     _max_skip = what;
 }

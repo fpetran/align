@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
 
     std::string e_name, f_name, dict_base;
     int closeness, skip;
+    bool disable_monotony;
 
     desc.add_options()
         ("help,h",
@@ -36,6 +37,9 @@ int main(int argc, char* argv[]) {
         ("dictionary,D",
           po::value<std::string>(&dict_base)->default_value("."),
           "base directory for dictionaries")
+        ("no-monotony,M",
+          po::bool_switch(&disable_monotony)->default_value(false),
+          "disable monotony constraint")
         ;
     // call a function
     // ( "closeness,c",
@@ -56,6 +60,8 @@ int main(int argc, char* argv[]) {
         par->set_closeness(closeness);
     if (m.count("dictionary"))
         par->set_dict_base(dict_base);
+    if (m.count("no-monotony"))
+        par->set_monotony(disable_monotony);
 
     if (m.count("help")) {
         std::cout << desc << std::endl;

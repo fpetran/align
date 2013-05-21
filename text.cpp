@@ -57,6 +57,15 @@ void WordToken::remove_from(const Sequence* seq) const {
             ++si;
 }
 
+bool WordToken::close_to(const WordToken& other) const {
+    bool result =  this->_position != other._position
+                && abs(this->_position - other._position)
+                   <= Params::get()->closeness();
+    if (Params::get()->monotony())
+        return result && this->_position < other._position;
+    return result;
+}
+
 /////////////////////////////// WordType //////////////////////////////////////
 WordType::WordType(const Text* text)
     : Word(text), _frequency(0) {}
