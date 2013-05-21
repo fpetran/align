@@ -46,7 +46,6 @@ class WordToken : public Word {
     friend class Pair;
     public:
         bool operator==(const WordToken&) const;
-        bool close_to(const WordToken& other) const;
         void remove_from(const Sequence* seq) const;
 
         inline const string_impl& get_str() const {
