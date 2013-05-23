@@ -12,7 +12,7 @@ using std::mutex;
 
 namespace {
 inline bool is_cognate(const string_impl& w1, const string_impl& w2,
-                       const int wordlength_threshold,
+                       const string_size wordlength_threshold,
                        const bi_sim::num_ty cognate_threshold) {
     return (w1 == w2)
         || (std::min(w1.length(), w2.length()) > wordlength_threshold
@@ -194,16 +194,16 @@ void result_outputter(ResultSet* resultset) {
             while (!r1->is_notified())
                 r1->cv.wait(lock);
 
-            file <<  to_cstr(r1->get_line()) << std::endl;
+            file << r1->get_line() << std::endl;
         }
         // output anything that remains for the results
         // TODO(fpetran) find out if there is a less clumsy
         // solution for this
         while (!r1->empty())
-            file << to_cstr(r1->get_line()) << std::endl;
+            file << r1->get_line() << std::endl;
 
         index_file << std::to_string(result_id)
-                   << ": " << to_cstr(r1->get_header())
+                   << ": " << r1->get_header()
                    << std::endl;
         file.close();
         dict_cout_mutex.lock();
