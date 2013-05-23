@@ -1,13 +1,11 @@
 // Copyright 2012 Florian Petran
 #include"align.h"
-
 #include<map>
 #include<vector>
 #include<utility>
 #include<algorithm>
 #include<list>
 #include<stdexcept>
-
 #include"params.h"
 #include"text.h"
 #include"dictionary.h"
@@ -95,8 +93,9 @@ SequenceContainer& SequenceContainer::initial_sequences() {
                     f1_used = true;
                     f1 = e1_translations->erase(f1);
                     f2 = e2_translations->erase(f2);
-                } else
+                } else {
                     ++f2;
+                }
             }
             if (!f1_used)
                 ++f1;
@@ -205,8 +204,7 @@ SequenceContainer& SequenceContainer::collect_scores() {
 SequenceContainer& SequenceContainer::get_topranking() {
     // the lambda removes other seqs with lower or equal
     // scores for a token, and returns true if the score
-    // was equal. if it was equal, the sequence we're looking
-    // at needs to be removed as well.
+    // was equal.
     auto remove_others =
         [&](const WordToken& tok, const Sequence* seq) -> bool {
             bool equals = false;
@@ -224,8 +222,9 @@ SequenceContainer& SequenceContainer::get_topranking() {
                     hypothesis->remove_sequence(*seq_to_remove);
                     if (tok.get_sequences()->size() == 0)
                         break;
-                } else
+                } else {
                     ++other_seq;
+                }
             }
             return equals;
         };

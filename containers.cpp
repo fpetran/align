@@ -97,7 +97,7 @@ Sequence::Sequence(const Dictionary& dict, const Pair& p1, const Pair& p2) {
 }
 
 Sequence::~Sequence() {
-    for (Pair& p : _list) {
+    for (Pair& p : *this) {
         p.target().remove_from(this);
         p.source().remove_from(this);
     }
@@ -105,14 +105,14 @@ Sequence::~Sequence() {
 
 const Sequence& Sequence::operator=(const Sequence& that) {
     _dict = that._dict;
-    for (Pair& p : _list) {
+    for (Pair& p : *this) {
         p.target().remove_from(this);
         p.source().remove_from(this);
     }
     _length = 0;
-    for (const Pair& p : that) {
-        this->add(p);
-        _slot = p.slot();
+    for (auto p = that.cbegin(); p != that.cend(); ++p) {
+        this->add(*p);
+        _slot = p->slot();
         ++_length;
     }
     return *this;
@@ -122,7 +122,7 @@ const Sequence& Sequence::operator=(const Sequence& that) {
 void Sequence::add(const Pair& p) {
     if (_length == 0)
         _slot = p.slot();
-    _list.push_back(p);
+    this->push_back(p);
     _back_slot = p.slot();
     p.source().add_to_sequence(this);
     p.target().add_to_sequence(this);
@@ -145,13 +145,13 @@ bool Sequence::add_if_close(const Pair& p) {
 }
 
 void Sequence::merge(const Sequence& that) {
-    for (Sequence::iterator pp = that._list.begin();
-            pp != that._list.end(); ++pp) {
+    for (auto pp = that.cbegin();
+            pp != that.cend(); ++pp) {
         this->add(*pp);
         pp->target().remove_from(const_cast<Sequence*>(&that));
         pp->source().remove_from(const_cast<Sequence*>(&that));
     }
-    _back_slot = _list.back().slot();
+    _back_slot = this->back().slot();
     _length += that.length();
 }
 
@@ -159,7 +159,7 @@ const Sequence& Sequence::reverse() {
     _dict = DictionaryFactory::get_instance()
             ->get_dictionary(_dict->get_f()->filename(),
                              _dict->get_e()->filename());
-    for (Pair& pair : _list)
+    for (Pair& pair : *this)
         pair.reverse();
 
     return *this;
@@ -174,9 +174,9 @@ int Sequence::back_slot() const
 bool Sequence::operator==(const Sequence& that) const {
     if (this->length() != that.length())
         return false;
-    auto this_it = this->begin(),
-         that_it = that.begin();
-    while (this_it != this->end() && that_it != that.end()) {
+    auto this_it = this->cbegin(),
+         that_it = that.cbegin();
+    while (this_it != this->cend() && that_it != that.cend()) {
         if (*this_it != *that_it)
             return false;
         ++this_it;
@@ -185,8 +185,8 @@ bool Sequence::operator==(const Sequence& that) const {
     return true;
 }
 bool Sequence::has_target(int target_pos) {
-    for (Sequence::iterator pp = _list.begin();
-            pp != _list.end(); ++pp)
+    for (Sequence::iterator pp = this->begin();
+            pp != this->end(); ++pp)
         if (pp->target_slot() == target_pos)
             return true;
     return false;
@@ -200,18 +200,12 @@ int Sequence::length() const {
     return _length;
 }
 
-Sequence::iterator Sequence::begin() const
-    { return _list.begin(); }
-
-Sequence::iterator Sequence::end() const
-    { return _list.end(); }
-
 const Pair& Sequence::first_pair() const {
-    return _list.front();
+    return this->front();
 }
 
 const Pair& Sequence::last_pair() const {
-    return _list.back();
+    return this->back();
 }
 
 ///////////////////////////////// Hypothesis ///////////////////////////////////
@@ -221,28 +215,28 @@ Hypothesis::Hypothesis(const Dictionary& d) {
 }
 
 Hypothesis::~Hypothesis() {
-    for (Sequence* seq : _sequences)
+    for (Sequence* seq : *this)
         delete seq;
 }
 
 Sequence* Hypothesis::new_sequence(const Pair& p) {
     Sequence* seq = new Sequence(*_dict, p);
-    _sequences.push_back(seq);
+    this->push_back(seq);
     return seq;
 }
 
 Hypothesis::iterator Hypothesis::remove_sequence(Hypothesis::iterator pos) {
-    if (pos == _sequences.end())
+    if (pos == this->end())
         return pos;
     Sequence* seq = *pos;
     delete seq;
-    Hypothesis::iterator newpos = _sequences.erase(pos);
+    Hypothesis::iterator newpos = this->erase(pos);
     return newpos;
 }
 
 Hypothesis::iterator Hypothesis::remove_sequence(Sequence* seq) {
     Hypothesis::iterator pos;
-    for (pos = _sequences.begin(); pos != _sequences.end(); ++pos)
+    for (pos = this->begin(); pos != this->end(); ++pos)
         if (*pos == seq)
             break;
     return this->remove_sequence(pos);
@@ -252,7 +246,7 @@ const Hypothesis& Hypothesis::reverse() {
     _dict = DictionaryFactory::get_instance()
             ->get_dictionary(_dict->get_f()->filename(),
                              _dict->get_e()->filename());
-    for (Sequence* seq : _sequences)
+    for (Sequence* seq : *this)
         seq->reverse();
 
     return *this;
@@ -275,7 +269,7 @@ const Hypothesis& Hypothesis::munch(Hypothesis *that) {
         }
         if (*this_seq == *that_seq)
             continue;
-        _sequences.insert(++this_seq, *that_seq);
+        this->insert(++this_seq, *that_seq);
     }
 
     return *this;
@@ -291,8 +285,8 @@ std::ostream& operator<<(std::ostream& strm, const Align::Pair& pair) {
 
 std::ostream& operator<<(std::ostream& strm, const Align::Sequence& seq) {
     strm << "{ ";
-    for (const Align::Pair& pair : seq)
-        strm << pair;
+    for (auto pair = seq.cbegin(); pair != seq.cend(); ++pair)
+        strm << *pair;
     strm << " }";
     return strm;
 }

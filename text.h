@@ -1,14 +1,12 @@
 // Copyright 2012 Florian Petran
 // representations for texts, and word types and tokens
-#ifndef ALIGN_TEXT_HH
-#define ALIGN_TEXT_HH
-
+#ifndef TEXT_H_
+#define TEXT_H_
 #include<string>
 #include<fstream>
 #include<list>
 #include<vector>
 #include<map>
-
 #include"string_impl.h"
 #include"params.h"
 
@@ -17,9 +15,9 @@ namespace Align {
 class Sequence;
 class Text;
 
-/**
- * base class for tokens/types
- *  access text ptr of a word
+/// Base class for WordToken and WordType.
+/** Takes care of the storage and access
+ *  of the Text ptr via the derived class.
  **/
 class Word {
     public:
@@ -35,15 +33,23 @@ class Word {
 
 class WordType;
 
-/**
- * a specific word at a specific position in the text
+/// A specific word at a specific position in the Text.
+/** Provides a check for closeness with another WordToken,
+ *  and a the methods to remove them from a Sequence, or
+ *  add them to a Sequence.
  *
- * access position in text
- * access string representation
+ *  Also provides access to
+ *  - the WordType, if needed.
+ *  - the string realization of the WordToken.
+ *  - All Sequence objects this WordToken is part of.
+ *
+ *  Since Sequence list, and string realization are both
+ *  pointers, only Text class is allowed to construct
+ *  WordToken objects, to ensure consistency and prevent
+ *  leaks.
  **/
 class WordToken : public Word {
     friend class Text;
-    friend class Pair;
     public:
         bool operator==(const WordToken&) const;
         bool close_to(const WordToken& other) const;
@@ -88,10 +94,14 @@ class WordToken : public Word {
         mutable std::list<Sequence*> *_sequences;
 };
 
-/**
- * a WordType
- *  access frequency of its tokens
- *  access a list of the token realizations
+/// A set of WordToken in a particular text.
+/** Note that the WordToken objects do not necessarily have the
+ *  same string realization, therefore we can't access that here
+ *  directly.
+ *
+ *  Provide access to
+ *  - frequency of its tokens (by amount of tokens associated with it).
+ *  - all WordToken objects associated with this.
  **/
 class WordType : public Word {
     friend class Text;
@@ -111,9 +121,10 @@ class WordType : public Word {
             // revising though.
             return this->_tokens.front() < other._tokens.front();
         }
+
+        /// test if ANY of the associated WordToken string
+        /// representations match
         bool operator==(const WordType&) const;
-        //!< tests if any of the associated tokens' string
-        //!< representations match
 
     protected:
         explicit WordType(const Text*);
@@ -124,60 +135,54 @@ class WordType : public Word {
         int _frequency;
 };
 
-/**
- * Represents a Text as a container.
- *
- * owns WordTokens string ptrs
- *
- * Words are stored in a vector of words, at the
- * same time there is a map that stores the indexes of each word.
- *
+/// Represents a Text as container.
+/** Provide sequential and random access to WordToken and WordType
+ *  objects.
+ *  Also owns the pointers to the string realizations of WordToken.
+ *  For this reason, the dtor can only be called by the Dictionary
+ *  objects associated with this Text.
  **/
-class Text {
+class Text : private std::vector<WordToken> {
     friend class Dictionary;
     friend class DictionaryFactory;
     public:
-        const WordToken& operator[](int) const;// NOLINT[readability/function]
-        //!< lookup of a word by index
-        const WordToken& at(int) const;        // NOLINT[readability/function]
-        //!< range checked lookup
+        Text() = delete;
+        Text(const Text&) = delete;
+        const Text& operator=(const Text&) = delete;
 
+        const WordToken& operator[](int pos) const;
+        const WordToken& at(int pos) const;
         inline int length() const {
             return _length;
         }
-
         inline const std::string& filename() const {
             return _fname;
         }
 
+        /// access is provided via a const_iterator, since
+        /// we don't expect to change the text at any point.
         typedef std::vector<WordToken>::const_iterator iterator;
         inline Text::iterator begin() const {
-            return _words.begin();
+            return this->cbegin();
         }
         inline Text::iterator end() const {
-            return _words.end();
+            return this->cend();
         }
 
     protected:
         explicit Text(const std::string&);
         ~Text();
-
         std::map<string_impl, WordType*> _types;
 
     private:
-        Text();
-        Text(const Text&);
-        const Text& operator=(const Text&);
-
         void open(const std::string&);
 
         std::string _fname;
-        std::vector<WordToken> _words;
+        /// these are copied between tokens, but owned by Text
         std::map<string_impl, string_impl*> string_ptrs;
-        //!< these are copied between tokens, but owned by Text
         int _length;
 };
 }
 
-#endif  // ALIGN_TEXT_HH
+#endif  // TEXT_H_
 

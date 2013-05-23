@@ -1,12 +1,10 @@
 // Copyright 2012 Florian Petran
 #include"params.h"
-
 #include<iostream>
 #include<string>
 #include<utility>
 #include<stdexcept>
 #include<boost/program_options.hpp> // NOLINT[build/include_order]
-#include"align_config.h"
 
 using std::string;
 using std::pair;
@@ -15,12 +13,7 @@ namespace Align {
 
 Params* Params::_instance = new Params;
 
-Params::Params()
-    : _closeness(ALIGN_DEFAULT_CLOSENESS),
-      _monotony(ALIGN_DEFAULT_MONOTONY),
-      _max_skip(ALIGN_DEFAULT_MAX_SKIP),
-      _dict_base(ALIGN_DEFAULT_DICT_BASE)
-    {}
+Params::Params() {}
 
 Params* Params::get() {
     return _instance;

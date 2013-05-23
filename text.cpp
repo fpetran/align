@@ -86,7 +86,7 @@ bool WordType::operator==(const WordType& other) const {
 
 ////////////////////////////////// Text ///////////////////////////////////////
 const WordToken& Text::operator[](int index) const {
-    return _words[index];
+    return this->operator[](index);
 }
 
 const WordToken& Text::at(int index) const {
@@ -134,7 +134,7 @@ void Text::open(const string& fname) {
                                   pos,
                                   _types[line]);
         _types[line]->add_token(tok);
-        _words.push_back(tok);
+        this->push_back(tok);
 
         ++pos;
     }

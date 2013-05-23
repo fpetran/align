@@ -171,12 +171,12 @@ void Dictionary::read(ifstream* file) {
         WordType* ft = _f->_types.at(tword);
         WordType* et = _e->_types.at(sword);
 
-        if (std::find(_storage[*et].begin(),
-                      _storage[*et].end(),
-                      *ft) != _storage[*et].end())
+        if (std::find((*this)[*et].begin(),
+                      (*this)[*et].end(),
+                      *ft) != (*this)[*et].end())
             continue;
 
-        _storage[*et].push_back(*ft);
+        (*this)[*et].push_back(*ft);
     }
 }
 
@@ -192,7 +192,7 @@ const list<WordType>& Dictionary::lookup(const WordToken& lemma) const {
     // this needs to be at(), because operator[] doesn't return
     // const. if the range checking proves to be too expensive,
     // change to operator[] and const_cast
-    return _storage.at(lemma.get_type());
+    return (*this).at(lemma.get_type());
 }
 
 
@@ -200,7 +200,7 @@ bool Dictionary::has(const WordToken& lemma) const {
     if (&lemma.get_text() != _e)
         throw runtime_error("Text of word to look up doesn't match e");
 
-    return _storage.count(lemma.get_type()) >= 1;
+    return (*this).count(lemma.get_type()) >= 1;
 }
 }
 

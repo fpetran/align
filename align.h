@@ -1,13 +1,10 @@
 // Copyright 2012 Florian Petran
-#ifndef ALIGN_ALIGN_HH
-#define ALIGN_ALIGN_HH
-
+#ifndef ALIGN_H_
+#define ALIGN_H_
 #include<cstdlib>
-
 #include<list>
 #include<utility>
 #include<map>
-
 #include"params.h"
 #include"text.h"
 #include"dictionary.h"
@@ -26,8 +23,8 @@ class Candidates {
         Candidates(const Candidates&) = delete;
         const Candidates& operator=(const Candidates&) = delete;
 
+        /// collect all translation candidates
         void collect();
-        //!< collect all translation candidates
 
         typedef std::map<WordToken, std::list<WordToken>*>::iterator
             iterator;
@@ -59,12 +56,15 @@ class SequenceContainer {
         const SequenceContainer&
             operator=(const SequenceContainer&) = delete;
 
+        /// construct initial Sequence objects (bigrams of pairs)
         SequenceContainer& initial_sequences();
-        //!< construct initial bigrams of pairs
+        /// expand the Sequence at tail end
         SequenceContainer& expand_sequences();
-        //!< expand the sequences at tail end
+        /// merge Sequence that are close
         SequenceContainer& merge_sequences();
+        /// collect confidence scores for all Sequence
         SequenceContainer& collect_scores();
+        /// remove all but topranking Sequence
         SequenceContainer& get_topranking();
 
         inline Hypothesis* get_result() {
@@ -78,10 +78,10 @@ class SequenceContainer {
         Candidates* _candidates;
         const Dictionary* _dict;
 
+        /// contains all scoring methods as functors
         ScoringMethods scoring_methods;
-        //!< contains all scoring methods as functors
 };
 }
 
-#endif  // ALIGN_ALIGN_HH
+#endif  // ALIGN_H_
 

@@ -1,6 +1,6 @@
 // Copyright 2012 Florian Petran
-#ifndef BI_SIM_H
-#define BI_SIM_H
+#ifndef BI_SIM_H_
+#define BI_SIM_H_
 #include"string_impl.h"
 
 namespace bi_sim {
@@ -8,5 +8,5 @@ namespace bi_sim {
     num_ty bi_sim(const string_impl&, const string_impl&);
 }
 
-#endif  // BI_SIM_H
+#endif  // BI_SIM_H_
 

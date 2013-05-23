@@ -37,7 +37,7 @@ float IndexdiffScorer::operator()(const Sequence& seq) {
     float s_len = seq.first_pair().source().get_text().length();
     float t_len = seq.first_pair().target().get_text().length();
 
-    for (Sequence::iterator pair = seq.begin(); pair != seq.end(); ++pair)
+    for (auto pair = seq.cbegin(); pair != seq.cend(); ++pair)
         result += fabs((pair->slot() / s_len)
                      - (pair->target_slot() / t_len));
 
@@ -51,7 +51,7 @@ float IndexdiffScorer::operator()(const Sequence& seq) {
 float BisimScorer::operator()(const Sequence& seq) {
     float result = 0.0;
 
-    for (Sequence::iterator pair = seq.begin(); pair != seq.end(); ++pair)
+    for (auto pair = seq.cbegin(); pair != seq.cend(); ++pair)
         result +=
                 bi_sim::bi_sim(pair->source().get_str(),
                                pair->target().get_str()) / seq.length();

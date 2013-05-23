@@ -1,15 +1,12 @@
 // Copyright 2013 Florian Petran
 #include"mkdict.h"
-
 #include<utility>
 #include<string>
 #include<vector>
 #include<stdexcept>
-
 #include"bi-sim.h"
 #include"align_config.h"
-
-#include<boost/program_options.hpp>
+#include<boost/program_options.hpp> // NOLINT[build/include_order]
 
 using std::vector;
 using std::pair;
@@ -19,6 +16,7 @@ using std::thread;
 
 namespace po = boost::program_options;
 
+namespace {
 struct opts {
     int wordlength_threshold;
     bi_sim::num_ty cognate_threshold;
@@ -71,6 +69,7 @@ pair<bool, int> get_options(opts* myopts,
     }
 
     return make_pair(false, 0);
+}
 }
 
 int main(int argc, char* argv[]) {
