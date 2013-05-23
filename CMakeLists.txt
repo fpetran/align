@@ -4,10 +4,12 @@
 cmake_minimum_required (VERSION 2.8.10)
 project (palign)
 
-option(INSTALL_DESTINATION "Directory to install the binary to" "/home/anselm/bin")
 option(INCLUDE_TESTS "Build all unit tests by default" OFF)
 option(INCLUDE_TAGS "Include ctags/cscope generation in default build" OFF)
-option(GCOV_COVERAGE "Test coverage with gcov (gcc only)" OFF)
+option(COVERAGE "Test coverage with gcov (gcc only)" OFF)
+# lolcmake: string options aren't options
+set(DESTINATION "/usr/local/bin" CACHE STRING "Directory to install binaries to")
+set(STRING_IMPL "ICU" CACHE STRING "String implementation to use (ICU|STD)")
 
 # set module path that find modules from the source tree can be used
 # (required for FindICU.cmake)
@@ -33,12 +35,33 @@ configure_file (
     "${PROJECT_SOURCE_DIR}/align_config.h.in"
     "${PROJECT_BINARY_DIR}/align_config.h"
     )
+include_directories(${PROJECT_BINARY_DIR})
 
 #####################################################################
 # find required packages
 #####################################################################
-find_package( Boost 1.48 COMPONENTS program_options REQUIRED )
-find_package( ICU 49 REQUIRED )
+find_package(Boost 1.48 COMPONENTS program_options REQUIRED)
+
+if (STRING_IMPL STREQUAL "ICU")
+    find_package(ICU 49)
+    if (NOT ICU_FOUND)
+        set(STRING_IMPL "STD")
+        message(SEND_ERROR "ICU Implementation NOT found - defaulting to use std::string")
+    else()
+        message(STATUS "Using ICU Unicode string implementation")
+        add_definitions(-DUSE_ICU_STRING)
+        set(STRING_LIBRARY ${ICU_LIBRARIES})
+        include_directories(${ICU_INCLUDE_DIRS})
+    endif()
+elseif(STRING_IMPL STREQUAL "STD")
+    message(STATUS "Using std::string implementation")
+else()
+    message(FATAL_ERROR "string implementation ${STRING_IMPL} not recognized!")
+endif()
+
+#####################################################################
+# compiler version check
+#####################################################################
 if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -pedantic")
     if (${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER "4.6.99")
@@ -55,9 +78,9 @@ if (CMAKE_COMPILER_IS_GNUCXX)
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ftest-coverage -fprofile-arcs")
     endif()
 endif()
+
 if (MSVC)
-    list( APPEND CMAKE_CXX_FLAGS_DEBUG " /W4" )
-    list( REMOVE_DUPLICATES CMAKE_CXX_FLAGS_DEBUG )
+    message(FATAL_ERROR "Sorry, compilation won't work with MSVC due to it's incomplete C++11 support")
 endif()
 
 #####################################################################
@@ -67,17 +90,16 @@ set(align_SRCS
     align.cpp params.cpp scorers.cpp containers.cpp
     text.cpp dictionary.cpp string_impl.cpp)
 set(bisim_SRCS bi-sim.cpp)
-include_directories(${ICU_INCLUDE_DIRS} ${PROJECT_BINARY_DIR})
 add_library(bisim ${bisim_SRCS})
 add_library(align ${align_SRCS})
 # alignment binary
-add_executable(palign main.cpp )
-target_link_libraries(align bisim)
-target_link_libraries(palign align ${Boost_LIBRARIES} ${ICU_LIBRARIES})
+add_executable(palign main.cpp)
+target_link_libraries(align bisim ${STRING_LIBRARY})
+target_link_libraries(palign align ${Boost_LIBRARIES} ${STRING_LIBRARY})
 # dictionary induction binary
 add_executable(mkdict mkdict_main.cpp mkdict.cpp string_impl.cpp)
-target_link_libraries(mkdict bisim ${Boost_LIBRARIES} ${ICU_LIBRARIES})
-install(TARGETS palign mkdict DESTINATION ${INSTALL_DESTINATION})
+target_link_libraries(mkdict bisim ${Boost_LIBRARIES} ${STRING_LIBRARY})
+install(TARGETS palign mkdict DESTINATION ${DESTINATION})
 
 #####################################################################
 # optional stuff

@@ -1,8 +1,9 @@
 // Copyright 2012 Florian Petran
 #include"string_impl.h"
-#include<string>
 
-#ifdef ALIGN_HAS_UCI_STRING
+#ifdef USE_ICU_STRING
+#include<string>
+#include<ostream>
 
 const char* to_cstr(const string_impl& str) {
     // one problem with this function:
@@ -27,7 +28,7 @@ std::ostream& operator<<(std::ostream& strm, const string_impl& ustr) {
     return strm;
 }
 
-#endif
+#endif  // USE_ICU_STRING
 
 bool has_alpha(const string_impl& str) {
     for (string_size i = 0; i < str.length(); ++i)

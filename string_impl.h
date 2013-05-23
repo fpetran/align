@@ -7,7 +7,7 @@
 #ifndef STRING_IMPL_H_
 #define STRING_IMPL_H_
 
-#ifdef ALIGN_HAS_UCI_STRING
+#ifdef USE_ICU_STRING
 #include<ostream>
 #include<unicode/unistr.h> // NOLINT[build/include_order]
 #include<unicode/uchar.h>  // NOLINT[build/include_order]
@@ -37,7 +37,7 @@ const char* to_cstr(const string_impl&);
 
 std::ostream& operator<<(std::ostream& strm, const string_impl& ustr);
 
-#else
+#else  // USE_ICU_STRING
 #include<algorithm>
 #include<string>
 
@@ -70,7 +70,7 @@ inline const char* to_cstr(const string_impl& str) {
     return str.c_str();
 }
 
-#endif  // ALIGN_HAS_UCI_STRING
+#endif  // USE_ICU_STRING
 
 bool has_alpha(const string_impl& str);
 
