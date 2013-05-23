@@ -1,27 +1,16 @@
 // Copyright 2012 Florian Petran
-#ifndef ALIGN_STRING_IMPL_H
-#define ALIGN_STRING_IMPL_H
-#include<cstdlib>
-#include<string>
-#include<ostream>
-
-// XXX too lazy to do it properly
-#define ALIGN_HAS_UCI_STRING
-
-// all string implementation stuff goes here
-// that goes for the strings that are actually in the file
-// and the functions associated with them, NOT strings from the
-// options, or filenames. Those are always std strings.
 //
-// the reason we're using butt ugly C style functions here
-// instead of nice, clean C++ objects, is
-// so that it will work well with UnicodeString, which has a
-// disgraceful interface.
-
+// All string implementation stuff goes here. Provides
+// wrapper for all operations and queries related to strings
+// so that the actual code has the option of using std::string
+// as well as UCI strings.
+#ifndef STRING_IMPL_H_
+#define STRING_IMPL_H_
 
 #ifdef ALIGN_HAS_UCI_STRING
-#include<unicode/unistr.h>
-#include<unicode/uchar.h>
+#include<ostream>
+#include<unicode/unistr.h> // NOLINT[build/include_order]
+#include<unicode/uchar.h>  // NOLINT[build/include_order]
 
 typedef UnicodeString string_impl;
 typedef UChar32 char_impl;
@@ -29,6 +18,8 @@ typedef int string_size;
 
 inline void lower_case(string_impl* str)
     { str->toLower(); }
+inline void upper_case(string_impl* str)
+    { str->toUpper(); }
 static const string_size string_npos = -1;
 inline void extract(const string_impl& str, int from, int to, string_impl* out)
     { str.extractBetween(from, to, *out); }
@@ -47,8 +38,8 @@ const char* to_cstr(const string_impl&);
 std::ostream& operator<<(std::ostream& strm, const string_impl& ustr);
 
 #else
-
 #include<algorithm>
+#include<string>
 
 typedef std::string string_impl;
 typedef char char_impl;
@@ -56,6 +47,9 @@ typedef size_t string_size;
 
 inline void lower_case(string_impl* str)
     { std::transform(str->begin(), str->end(), str->begin(), ::tolower); }
+
+inline void upper_case(string_impl* str)
+    { std::transform(str->begin(), str->end(), str->begin(), ::toupper); }
 
 static const size_t string_npos = std::string::npos;
 
@@ -80,4 +74,12 @@ inline const char* to_cstr(const string_impl& str) {
 
 bool has_alpha(const string_impl& str);
 
-#endif  // ALIGN_STRING_IMPL_H
+inline void upper_case(char_impl* c) {
+    string_impl s = "";
+    s += *c;
+    upper_case(&s);
+    *c = s[0];
+}
+
+#endif  // STRING_IMPL_H_
+

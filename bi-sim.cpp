@@ -1,37 +1,33 @@
 // Copyright 2012 Florian Petran
 #include"bi-sim.h"
-#include<unicode/uchar.h>
 #include<vector>
 #include<algorithm>
 
 using std::vector;
 using std::max;
 
-// TODO(fpetran)
-// this is hard coded to rely on icu
-// should be made to work with std::string
-// too
-
 namespace bi_sim {
     typedef unsigned int uint;
     typedef vector<num_ty> mat_ty;
 
     inline num_ty id(uint x, uint y) {
-        if (x == y)
-            return 1;
-        return 0;
+        return x == y ? 1 : 0;
     }
 
-    num_ty bi_sim(const String& w1, const String& w2) {
-        uint m = w1.length();
-        uint n = w2.length();
-        String x = w1;
-        String y = w2;
-        x.toLower();
-        y.toLower();
+    num_ty bi_sim(const string_impl& w1, const string_impl& w2) {
+        uint m = w1.length(),
+             n = w2.length();
+        string_impl x = w1,
+                    y = w2;
+        lower_case(&x);
+        lower_case(&y);
+        char_impl x1 = x[0],
+                  y1 = y[0];
+        upper_case(&x1);
+        upper_case(&y1);
 
-        x = u_toupper(x[0]) + x;
-        y = u_toupper(y[0]) + y;
+        x = x1 + x;
+        y = y1 + y;
 
         // initialize and fill matrix
         vector<vector<num_ty>> f;
