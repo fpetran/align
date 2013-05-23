@@ -19,27 +19,12 @@ ScoringMethods::ScoringMethods() {
 }
 
 ScoringMethods::~ScoringMethods() {
-    // so far we don't need a virtual dtor for the scorers
-    // because they don't have data members different from
-    // the base. it's possible though that msvc++ requires
-    // it - we'll see about that.
     for (vector<Scorer*>::iterator sc = this->begin();
             sc != this->end(); ++sc)
         delete *sc;
 }
 
-void ScoringMethods::push_back(Scorer* s) {
-    vector<Scorer*>::push_back(s);
-}
-
-Scorer::Scorer() {
-    _max = 0.0;
-}
-
-float Scorer::get_max() {
-    return _max;
-}
-
+Scorer::Scorer() : _max(0.0) {}
 
 float LengthScorer::operator()(const Sequence& seq) {
     _max = (_max > seq.length()) ? _max : seq.length();
