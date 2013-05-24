@@ -1,11 +1,10 @@
 // Copyright 2012 Florian Petran
 #include"text.h"
-
 #include<cctype>
-
 #include<string>
 #include<list>
 #include<fstream>
+#include<ostream>
 #include<stdexcept>
 #include<utility>
 
@@ -145,5 +144,10 @@ void Text::open(const string& fname) {
     file.clear();
     file.close();
 }
+}
+
+std::ostream& operator<<(std::ostream& strm, const Align::WordToken& tok) {
+    strm << tok.get_str();
+    return strm;
 }
 

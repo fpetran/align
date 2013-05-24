@@ -4,6 +4,7 @@
 #define TEXT_H_
 #include<string>
 #include<fstream>
+#include<ostream>
 #include<list>
 #include<vector>
 #include<map>
@@ -183,6 +184,8 @@ class Text : private std::vector<WordToken> {
         int _length;
 };
 }
+
+std::ostream& operator<<(std::ostream& strm, const Align::WordToken& tok);
 
 #endif  // TEXT_H_
 
