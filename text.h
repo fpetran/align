@@ -4,7 +4,6 @@
 #define TEXT_H_
 #include<string>
 #include<fstream>
-#include<ostream>
 #include<list>
 #include<vector>
 #include<map>
@@ -57,6 +56,9 @@ class WordToken : public Word {
         void remove_from(const Sequence* seq) const;
 
         inline const string_impl& get_str() const {
+            return *_string_realization;
+        }
+        operator string_impl() {
             return *_string_realization;
         }
         inline int position() const {
@@ -164,10 +166,10 @@ class Text : private std::vector<WordToken> {
         /// we don't expect to change the text at any point.
         typedef std::vector<WordToken>::const_iterator iterator;
         inline Text::iterator begin() const {
-            return this->cbegin();
+            return std::vector<WordToken>::cbegin();
         }
         inline Text::iterator end() const {
-            return this->cend();
+            return std::vector<WordToken>::cend();
         }
 
     protected:
@@ -184,8 +186,6 @@ class Text : private std::vector<WordToken> {
         int _length;
 };
 }
-
-std::ostream& operator<<(std::ostream& strm, const Align::WordToken& tok);
 
 #endif  // TEXT_H_
 

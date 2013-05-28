@@ -78,26 +78,25 @@ class Sequence : std::list<Pair> {
 
         typedef std::list<Pair>::const_iterator const_iterator;
         inline Sequence::const_iterator cbegin() const {
-            return this->cbegin();
+            return std::list<Pair>::cbegin();
         }
         inline Sequence::const_iterator cend() const {
-            return this->cend();
+            return std::list<Pair>::cend();
         }
         typedef std::list<Pair>::iterator iterator;
         inline Sequence::iterator begin() {
-            return this->begin();
+            return std::list<Pair>::begin();
         }
         inline Sequence::iterator end() {
-            return this->end();
+            return std::list<Pair>::end();
         }
+        operator std::vector<int>();
 
     protected:
         explicit Sequence(const Dictionary&);
         /// construct an initial Sequence over two texts from one pair
         Sequence(const Dictionary&, const Pair&);
-        /// construct a Sequence over two pairs
-        Sequence(const Dictionary&, const Pair&, const Pair&);
-        Sequence(const Sequence&);
+        Sequence(const Sequence&) = delete;
         const Sequence& operator=(const Sequence&);
         /// only hypothesis may call the dtor, because it
         /// owns the pointers
@@ -105,10 +104,11 @@ class Sequence : std::list<Pair> {
 
     private:
         const Dictionary* _dict;
-        float _score;
-        int _slot, _back_slot;
+        float _score = 0.0;
+        int _slot = 0,
+            _back_slot = 0;
         /// cache for _length
-        mutable int _length;
+        mutable int _length = 0;
 };
 
 class SequenceContainer;
@@ -129,16 +129,16 @@ class Hypothesis : private std::list<Sequence*> {
         typedef std::list<Sequence*>::iterator iterator;
         typedef std::list<Sequence*>::const_iterator const_iterator;
         inline iterator begin() {
-            return this->begin();
+            return std::list<Sequence*>::begin();
         };
         inline const_iterator cbegin() const {
-            return this->cbegin();
+            return std::list<Sequence*>::cbegin();
         };
         inline iterator end() {
-            return this->end();
+            return std::list<Sequence*>::end();
         };
         inline const_iterator cend() const {
-            return this->cend();
+            return std::list<Sequence*>::cend();
         }
 
         Sequence* new_sequence(const Pair& p);

@@ -83,17 +83,8 @@ Sequence::Sequence(const Dictionary& dict) {
 }
 
 Sequence::Sequence(const Dictionary& dict, const Pair& p) {
-    _length = 0;
     _dict = &dict;
     this->add(p);
-}
-
-Sequence::Sequence(const Dictionary& dict, const Pair& p1, const Pair& p2) {
-    _length = 0;
-    _dict = &dict;
-    this->add(p1);
-    this->add(p2);
-    _slot = p1.slot();
 }
 
 Sequence::~Sequence() {
@@ -116,6 +107,15 @@ const Sequence& Sequence::operator=(const Sequence& that) {
         ++_length;
     }
     return *this;
+}
+
+Sequence::operator std::vector<int>() {
+    std::vector<int> vec;
+    for (auto p = cbegin(); p != cend(); ++p) {
+        vec.push_back(p->slot());
+        vec.push_back(p->target_slot());
+    }
+    return vec;
 }
 
 

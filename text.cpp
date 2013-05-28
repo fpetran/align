@@ -85,7 +85,7 @@ bool WordType::operator==(const WordType& other) const {
 
 ////////////////////////////////// Text ///////////////////////////////////////
 const WordToken& Text::operator[](int index) const {
-    return this->operator[](index);
+    return std::vector<WordToken>::operator[](index);
 }
 
 const WordToken& Text::at(int index) const {
@@ -144,10 +144,5 @@ void Text::open(const string& fname) {
     file.clear();
     file.close();
 }
-}
-
-std::ostream& operator<<(std::ostream& strm, const Align::WordToken& tok) {
-    strm << tok.get_str();
-    return strm;
 }
 
