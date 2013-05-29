@@ -30,9 +30,6 @@ inline bool check_if_alpha(char_impl c) {
     return u_isalpha(c);
 }
 
-// printString for UCI needs a local char_ptr, so it's not inlined
-void printString(const string_impl&);
-
 const char* to_cstr(const string_impl&);
 
 std::ostream& operator<<(std::ostream& strm, const string_impl& ustr);
@@ -58,9 +55,6 @@ inline void extract(const string_impl& str, int from, int to, string_impl* out)
 
 inline string_size string_find(const string_impl& me, const char* you)
     { return me.find(you); }
-
-inline void printString(const string_impl& str)
-    { printf("%s\n", str.c_str()); }
 
 inline bool check_if_alpha(char_impl c) {
     return isalpha(c);

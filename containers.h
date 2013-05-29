@@ -52,9 +52,9 @@ class Sequence : std::list<Pair> {
         void add(const Pair&);
         /// add a pair if its target is close to our last target,
         /// return whether it was added or not
-        bool add_if_close(const Pair&);
+        bool add_if_close(const Pair& p);
         /// merge another sequence to this
-        void merge(const Sequence&);
+        void merge(Sequence* s);
         /// reverse e and f
         const Sequence& reverse();
         /// starting slot of the sequence

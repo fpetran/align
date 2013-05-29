@@ -158,7 +158,7 @@ AlignMake& AlignMake::merge_sequences() {
                 continue;
 
             if ((*seq)->last_pair().both_close((*other)->first_pair())) {
-                (*seq)->merge(**other);
+                (*seq)->merge(*other);
                 other = hypothesis->remove_sequence(other);
                 ++combined;
             }

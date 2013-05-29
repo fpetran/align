@@ -17,11 +17,6 @@ const char* to_cstr(const string_impl& str) {
     return out;
 }
 
-void printString(const string_impl& str) {
-    const char* out = to_cstr(str);
-    printf("%s\n", out);
-}
-
 std::ostream& operator<<(std::ostream& strm, const string_impl& ustr) {
     std::string str = to_cstr(ustr);
     strm << str;

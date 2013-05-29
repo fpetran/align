@@ -151,15 +151,15 @@ bool Sequence::add_if_close(const Pair& p) {
     return false;
 }
 
-void Sequence::merge(const Sequence& that) {
-    for (auto pp = that.cbegin();
-            pp != that.cend(); ++pp) {
+void Sequence::merge(Sequence* that) {
+    for (auto pp = that->begin();
+            pp != that->end(); ++pp) {
         this->add(*pp);
-        pp->target().remove_from(const_cast<Sequence*>(&that));
-        pp->source().remove_from(const_cast<Sequence*>(&that));
+        pp->target().remove_from(that);
+        pp->source().remove_from(that);
     }
     _back_slot = this->back().slot();
-    _length += that.length();
+    _length += that->length();
 }
 
 const Sequence& Sequence::reverse() {
