@@ -6,7 +6,7 @@ project (palign)
 
 option(INCLUDE_TESTS "Build all unit tests by default" OFF)
 option(INCLUDE_TAGS "Include ctags/cscope generation in default build" OFF)
-option(COVERAGE "Test coverage with gcov (gcc only)" OFF)
+option(GCOV_COVERAGE "Test coverage with gcov (gcc only)" OFF)
 # lolcmake: string options aren't options
 set(DESTINATION "/usr/local/bin" CACHE STRING "Directory to install binaries to")
 set(STRING_IMPL "ICU" CACHE STRING "String implementation to use (ICU|STD)")
@@ -30,7 +30,8 @@ set (align_DEFAULT_DICT_BASE ".")
 set (align_DEFAULT_MONOTONY true)
 set (dictionary_WORDLENGTH_THRESHOLD 3)
 set (dictionary_COGNATE_THRESHOLD 0.7)
-# this is for stuff that can be set by cmake
+# path for tests
+set (align_TEST_BASE "${PROJECT_SOURCE_DIR}/test_data")
 configure_file (
     "${PROJECT_SOURCE_DIR}/align_config.h.in"
     "${PROJECT_BINARY_DIR}/align_config.h"
@@ -102,7 +103,7 @@ target_link_libraries(mkdict bisim ${Boost_LIBRARIES} ${STRING_LIBRARY})
 install(TARGETS palign mkdict DESTINATION ${DESTINATION})
 
 #####################################################################
-# optional stuff
+# optional stuff to help with development
 #####################################################################
 # doc generation
 find_package(Doxygen)
@@ -151,7 +152,8 @@ elseif(CTAGS AND CSCOPE)
         COMMAND make cscope
     )
 endif()
-
+# google style checker available at
+# http://google-styleguide.googlecode.com/svn/trunk/cpplint/cpplint.py
 find_program(CPPLINT cpplint.py)
 if(NOT CPPLINT STREQUAL "CPPLINT-NOTFOUND")
     add_custom_target(lint
@@ -166,7 +168,8 @@ endif()
 #####################################################################
 find_package(GTest)
 if(GTEST_FOUND)
-    set (TESTCASE_LIBS align ${GTEST_BOTH_LIBRARIES} ${ICU_LIBRARIES})
+    set(TESTCASE_LIBS
+        align ${GTEST_BOTH_LIBRARIES} ${STRING_LIBRARY} ${Boost_LIBRARIES})
     enable_testing()
     include_directories(${GTEST_INCLUDE_DIRS})
 
@@ -184,7 +187,7 @@ if(GTEST_FOUND)
     endif()
     target_link_libraries(text_test ${TESTCASE_LIBS})
     target_link_libraries(align_test ${TESTCASE_LIBS})
-    target_link_libraries(bisim_test ${GTEST_BOTH_LIBRARIES} bisim)
+    target_link_libraries(bisim_test ${GTEST_BOTH_LIBRARIES} ${STRING_LIBRARY} bisim)
 
     add_test(text_test text_test)
     add_test(align_test align_test)

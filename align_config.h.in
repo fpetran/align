@@ -1,23 +1,24 @@
-#ifndef ALIGN_ALIGN_CONFIG_HH
-#define ALIGN_ALIGN_CONFIG_HH
+#ifndef ALIGN_CONFIG_H_
+#define ALIGN_CONFIG_H_
 
-/*
- * the stuff in here is more evil than mordor
- * but it's easier to use macros for the stuff
- * that gets set by cmake
- *
- */
-
+// Version configured by CMake
 #define ALIGN_VERSION_MAJOR @align_VERSION_MAJOR@
 #define ALIGN_VERSION_MINOR @align_VERSION_MINOR@
 #define ALIGN_VERSION "@align_VERSION@"
 
+// default parameters for alignment
 #define ALIGN_DEFAULT_MAX_SKIP @align_DEFAULT_MAX_SKIP@
 #define ALIGN_DEFAULT_CLOSENESS @align_DEFAULT_CLOSENESS@
 #define ALIGN_DEFAULT_DICT_BASE "@align_DEFAULT_DICT_BASE@"
 #define ALIGN_DEFAULT_MONOTONY @align_DEFAULT_MONOTONY@
 
+// default parameters for dictionary induction
 #define DICTIONARY_COGNATE_THRESHOLD @dictionary_COGNATE_THRESHOLD@
 #define DICTIONARY_WORDLENGTH_THRESHOLD @dictionary_WORDLENGTH_THRESHOLD@
 
-#endif
+#define ALIGN_TEST_BASE "@align_TEST_BASE@"
+#define ALIGN_TEST_DICT "@align_TEST_BASE@/dict/"
+#define ALIGN_TEST_E "@align_TEST_BASE@/test_e.txt"
+#define ALIGN_TEST_F "@align_TEST_BASE@/test_f.txt"
+
+#endif  // ALIGN_CONFIG_H_
