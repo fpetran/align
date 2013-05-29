@@ -7,8 +7,6 @@
 #include"text.h"
 #include"dictionary.h"
 
-using namespace Align;
-
 // fixture for all texts
 class WordTest_Fixture : public testing::Test {
     protected:
@@ -42,13 +40,13 @@ class WordTest_Fixture : public testing::Test {
         }
 
         // Objects declared here can be used by all tests
-        Params* params = Params::get();
-        DictionaryFactory* df = DictionaryFactory::get_instance();
+        Align::Params* params = Align::Params::get();
+        Align::DictionaryFactory* df = Align::DictionaryFactory::get_instance();
 
         /// first lines from e and f, read conventionally
         string_impl f_first, e_first;
-        const Dictionary* _dict;
-        const Text *_e, *_f;
+        const Align::Dictionary* _dict;
+        const Align::Text *_e, *_f;
 };
 
 
@@ -66,14 +64,14 @@ TEST_F(WordTest, Comparison) {
     // their types should be equal if the string representations match
     // plus, they should point to the same type anyway.
     // pegraben
-    WordToken tok_f1 = _f->at(17),
-              tok_f2 = _f->at(25);
+    Align::WordToken tok_f1 = _f->at(17),
+                     tok_f2 = _f->at(25);
     EXPECT_TRUE(tok_f1 != tok_f2);
     EXPECT_TRUE(tok_f1.get_type() == tok_f2.get_type());
     EXPECT_TRUE(&tok_f1.get_type() == &tok_f2.get_type());
 
-    WordToken tok_e1 = _e->at(0),
-              tok_e2 = _e->at(16);
+    Align::WordToken tok_e1 = _e->at(0),
+                     tok_e2 = _e->at(16);
     EXPECT_TRUE(tok_e1 != tok_e2);
     EXPECT_TRUE(tok_e1.get_type() == tok_e2.get_type());
     EXPECT_TRUE(&tok_e1.get_type() == &tok_e2.get_type());
@@ -101,16 +99,16 @@ TEST_F(WordTest, LookupTest) {
     // for each token, the translations returned should be the same
     // other tokens with 3 translations:
     // 8 (aa), 9 (ab), 12 (ae), 13 (af), 17 (aa)
-    WordToken tok_e1 = _e->at(8),
-              tok_e2 = _e->at(17);
+    Align::WordToken tok_e1 = _e->at(8),
+                     tok_e2 = _e->at(17);
 
-    const std::list<WordType> &trans1 = _dict->lookup(tok_e1),
-                              &trans2 = _dict->lookup(tok_e2);
+    const std::list<Align::WordType> &trans1 = _dict->lookup(tok_e1),
+                                     &trans2 = _dict->lookup(tok_e2);
     int num_trans_1 = 0;
-    for (const WordType& tr_type : trans1)
+    for (const Align::WordType& tr_type : trans1)
         num_trans_1 += tr_type.get_tokens().size();
     int num_trans_2 = 0;
-    for (const WordType& tr_type : trans2)
+    for (const Align::WordType& tr_type : trans2)
         num_trans_2 += tr_type.get_tokens().size();
 
     EXPECT_EQ(3, num_trans_1);

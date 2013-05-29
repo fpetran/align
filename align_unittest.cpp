@@ -8,8 +8,6 @@
 #include"align_config.h"
 #include"string_impl.h"
 
-using namespace Align;
-
 /*
  * customer test
  * test example alignment with two texts
@@ -22,13 +20,14 @@ using namespace Align;
 class AlignTest_Fixture : public testing::Test {
     protected:
         virtual void SetUp() {
-            Params* params = Params::get();
+            Align::Params* params = Align::Params::get();
             params->set_dict_base(ALIGN_TEST_DICT);
-            DictionaryFactory* df = DictionaryFactory::get_instance();
+            Align::DictionaryFactory* df =
+                Align::DictionaryFactory::get_instance();
             _dict = df->get_dictionary(ALIGN_TEST_E, ALIGN_TEST_F);
-            c = new Candidates(*_dict);
+            c = new Align::Candidates(*_dict);
             c->collect();
-            sc = new SequenceContainer(c);
+            sc = new Align::AlignMake(c);
         }
         virtual void TearDown() {
             delete c;
@@ -36,17 +35,9 @@ class AlignTest_Fixture : public testing::Test {
         }
 
         // data members
-        const Dictionary* _dict;
-        Candidates* c;
-        SequenceContainer *sc;
-
-        void read_seq_to_vec(std::vector<int>* vec) {
-            for (Sequence* seq : *(sc->get_result()))
-                for (const Pair& pair : *seq) {
-                    vec->push_back(pair.source().position());
-                    vec->push_back(pair.target().position());
-                }
-        }
+        const Align::Dictionary* _dict;
+        Align::Candidates* c;
+        Align::AlignMake *sc;
 };
 
 class AlignTest : public AlignTest_Fixture {
@@ -74,20 +65,18 @@ TEST_F(AlignTest, CandidatesTest) {
 TEST_F(AlignTest, SequenceTestInital) {
     sc->initial_sequences();
 
-    std::vector<std::vector<int>> expected_sequence =
-    {
+    std::vector<std::vector<int>> expected_sequence = {
         { 8, 19,
           9, 20 },
         { 10, 21,
           12, 22 },
-        // ---
         { 12, 27,
           13, 28 }
     };
 
     // put actual indexes values into array too
-    Hypothesis *result = sc->get_result();
-    Hypothesis::iterator seq = result->begin();
+    Align::Hypothesis *result = sc->get_result();
+    Align::Hypothesis::iterator seq = result->begin();
     int exp = 0;
     while (seq != result->end()) {
         EXPECT_EQ(expected_sequence[exp], std::vector<int>(**seq));
@@ -100,21 +89,17 @@ TEST_F(AlignTest, SequenceTestExpand) {
     sc->initial_sequences();
     sc->expand_sequences();
 
-    std::vector<int> expected_sequence {
-        8, 19,
-        9, 20,
-        // --
-        10, 21,
-        12, 22,
-        13, 23,
-        // --
-        12, 27,
-        13, 28,
-        17, 30
+    std::vector<std::vector<int>> expected_sequence {
+        { 8, 19,
+          9, 20 },
+        { 10, 21,
+          12, 22,
+          13, 23 },
+        { 12, 27,
+          13, 28,
+          17, 30 }
     };
-
-    std::vector<int> actual_sequence;
-    read_seq_to_vec(&actual_sequence);
+    std::vector<std::vector<int>> actual_sequence = *(sc->get_result());
 
     EXPECT_EQ(expected_sequence.size(), actual_sequence.size());
     EXPECT_EQ(expected_sequence, actual_sequence);
@@ -125,37 +110,18 @@ TEST_F(AlignTest, SequenceTestMerge) {
     sc->expand_sequences();
     sc->merge_sequences();
 
-    std::vector<int> expected_one {
-        8, 19,
-        9, 20,
-        10, 21,
-        12, 22,
-        13, 23
+    std::vector<std::vector<int>> expected = {
+        {  8, 19,
+           9, 20,
+          10, 21,
+          12, 22,
+          13, 23 },
+        { 12, 27,
+          13, 28,
+          17, 30 }
     };
-
-    std::vector<int> expected_two {
-        12, 27,
-        13, 28,
-        17, 30
-    };
-
-
-    // lots of hardcoded assumptions here. we should
-    // have two sequences in sc with the content as
-    // above
-    Hypothesis *result = sc->get_result();
-    Hypothesis::iterator seq = result->begin();
-    std::vector<int> actual_one = **seq;
-    ++seq;
-    std::vector<int> actual_two = **seq;
-    ++seq;
-
-    EXPECT_EQ(seq, result->end());
-
-    EXPECT_EQ(expected_one.size(), actual_one.size());
-    EXPECT_EQ(expected_one, actual_one);
-    EXPECT_EQ(expected_two.size(), actual_two.size());
-    EXPECT_EQ(expected_two, actual_two);
+    std::vector<std::vector<int>> actual = *(sc->get_result());
+    EXPECT_EQ(expected, actual);
 }
 
 TEST_F(AlignTest, TestAll) {
@@ -165,15 +131,14 @@ TEST_F(AlignTest, TestAll) {
     sc->collect_scores();
     sc->get_topranking();
 
-    std::vector<int> expected {
+    std::vector<std::vector<int>> expected { {
         8, 19,
         9, 20,
         10, 21,
         12, 22,
         13, 23
-    };
-    std::vector<int> actual;
-    read_seq_to_vec(&actual);
+    } };
+    std::vector<std::vector<int>> actual = *(sc->get_result());
     EXPECT_EQ(expected.size(), actual.size());
     EXPECT_EQ(expected, actual);
 }
