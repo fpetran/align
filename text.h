@@ -185,7 +185,7 @@ class Text : private std::vector<WordToken> {
         std::map<string_impl, string_impl*> string_ptrs;
         int _length;
 };
-}
+}  // namespace Align
 
 #endif  // TEXT_H_
 

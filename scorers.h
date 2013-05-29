@@ -77,7 +77,7 @@ class BisimScorer : public Scorer {
         return "bi_sim";
     }
 };
-}
+}  // namespace Align
 
 #endif  // SCORERS_H_
 

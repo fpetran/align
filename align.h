@@ -14,7 +14,7 @@
 namespace Align {
 
 class Candidates {
-    friend class SequenceContainer;
+    friend class AlignMake;
     public:
         explicit Candidates(const Dictionary&);
         ~Candidates();
@@ -47,28 +47,31 @@ class Candidates {
         const Dictionary* _dict;
 };
 
-class SequenceContainer {
+class AlignMake {
     public:
-        explicit SequenceContainer(Candidates* cand);
+        explicit AlignMake(Candidates* cand);
 
-        SequenceContainer() = delete;
-        SequenceContainer(const SequenceContainer&) = delete;
-        const SequenceContainer&
-            operator=(const SequenceContainer&) = delete;
+        AlignMake() = delete;
+        AlignMake(const AlignMake&) = delete;
+        const AlignMake&
+            operator=(const AlignMake&) = delete;
 
         /// construct initial Sequence objects (bigrams of pairs)
-        SequenceContainer& initial_sequences();
+        AlignMake& initial_sequences();
         /// expand the Sequence at tail end
-        SequenceContainer& expand_sequences();
+        AlignMake& expand_sequences();
         /// merge Sequence that are close
-        SequenceContainer& merge_sequences();
+        AlignMake& merge_sequences();
         /// collect confidence scores for all Sequence
-        SequenceContainer& collect_scores();
+        AlignMake& collect_scores();
         /// remove all but topranking Sequence
-        SequenceContainer& get_topranking();
+        AlignMake& get_topranking();
 
         inline Hypothesis* get_result() {
             return hypothesis;
+        }
+        inline ScoringMethods* scorers() {
+            return &scoring_methods;
         }
 
     private:
@@ -77,11 +80,10 @@ class SequenceContainer {
         Params* params;
         Candidates* _candidates;
         const Dictionary* _dict;
-
         /// contains all scoring methods as functors
         ScoringMethods scoring_methods;
 };
-}
+}  // namespace Align
 
 #endif  // ALIGN_H_
 

@@ -49,4 +49,5 @@ namespace bi_sim {
 
         return f[m][n] / (2 * max(m, n));
     }
-}
+}  // namespace bi_sim
+

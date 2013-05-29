@@ -4,6 +4,7 @@
 #define CONTAINERS_H_
 #include<list>
 #include<map>
+#include<vector>
 #include<iostream>
 #include<string>
 #include"text.h"
@@ -111,7 +112,7 @@ class Sequence : std::list<Pair> {
         mutable int _length = 0;
 };
 
-class SequenceContainer;
+class AlignMake;
 
 /// an alignment hypothesis consisting of multiple sequences.
 /** also the Sequence factory.
@@ -124,7 +125,7 @@ class SequenceContainer;
  *  - merge with another hypothesis
  */
 class Hypothesis : private std::list<Sequence*> {
-    friend class SequenceContainer;
+    friend class AlignMake;
     public:
         typedef std::list<Sequence*>::iterator iterator;
         typedef std::list<Sequence*>::const_iterator const_iterator;
@@ -140,6 +141,7 @@ class Hypothesis : private std::list<Sequence*> {
         inline const_iterator cend() const {
             return std::list<Sequence*>::cend();
         }
+        operator std::vector<std::vector<int>>();
 
         Sequence* new_sequence(const Pair& p);
         iterator remove_sequence(iterator pos);
@@ -166,7 +168,7 @@ class Hypothesis : private std::list<Sequence*> {
     private:
         const Dictionary* _dict;
 };
-}
+}  // namespace Align
 
 std::ostream& operator<<(std::ostream& strm, const Align::Pair& pair);
 std::ostream& operator<<(std::ostream& strm, const Align::Sequence& seq);

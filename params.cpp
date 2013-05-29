@@ -92,5 +92,5 @@ pair<string, string> Params::parse(int argc, char* argv[]) {
     return make_pair(m["source"].as<string>(),
                      m["target"].as<string>());
 }
-}
+}  // namespace Align
 

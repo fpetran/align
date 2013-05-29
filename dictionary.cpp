@@ -202,5 +202,5 @@ bool Dictionary::has(const WordToken& lemma) const {
 
     return (*this).count(lemma.get_type()) >= 1;
 }
-}
+}  // namespace Align
 

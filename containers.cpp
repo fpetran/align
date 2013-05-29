@@ -1,6 +1,7 @@
 // Copyright 2012 Florian Petran
 #include<list>
 #include<map>
+#include<vector>
 #include<stdexcept>
 
 #include"containers.h"
@@ -118,6 +119,12 @@ Sequence::operator std::vector<int>() {
     return vec;
 }
 
+Hypothesis::operator std::vector<std::vector<int>>() {
+    std::vector<std::vector<int>> vec;
+    for (auto s = cbegin(); s != cend(); ++s)
+        vec.push_back(std::vector<int>(**s));
+    return vec;
+}
 
 void Sequence::add(const Pair& p) {
     if (_length == 0)
@@ -274,7 +281,7 @@ const Hypothesis& Hypothesis::munch(Hypothesis *that) {
 
     return *this;
 }
-}
+}  // namespace Align
 
 std::ostream& operator<<(std::ostream& strm, const Align::Pair& pair) {
     strm << "[ "

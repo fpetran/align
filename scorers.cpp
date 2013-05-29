@@ -60,5 +60,5 @@ float BisimScorer::operator()(const Sequence& seq) {
 
     return result;
 }
-}
+}  // namespace Align
 

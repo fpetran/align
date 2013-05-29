@@ -45,7 +45,7 @@ class Params {
         int _max_skip           = ALIGN_DEFAULT_MAX_SKIP;
         std::string _dict_base  = ALIGN_DEFAULT_DICT_BASE;
 };
-}
+}  // namespace Align
 
 #endif  // PARAMS_H_
 

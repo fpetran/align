@@ -4,6 +4,9 @@
 // This is independent from the actual alignment code.
 #ifndef MKDICT_H_
 #define MKDICT_H_
+#include<thread>
+#include<mutex>
+#include<condition_variable>
 #include<iostream>
 #include<fstream>
 #include<string>
@@ -11,9 +14,6 @@
 #include<queue>
 #include<map>
 #include<algorithm>
-#include<thread>
-#include<mutex>
-#include<condition_variable>
 #include"bi-sim.h"
 #include"string_impl.h"
 
@@ -73,6 +73,7 @@ void fileset_processor(const std::string& e, const std::string& f,
                        const bi_sim::num_ty cognate_threshold);
 
 void result_outputter(ResultSet* results);
-}
+}  // namespace DictionaryInducer
 
 #endif  // MKDICT_H_
+

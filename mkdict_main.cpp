@@ -70,7 +70,7 @@ pair<bool, int> get_options(opts* myopts,
 
     return make_pair(false, 0);
 }
-}
+}  // namespace
 
 int main(int argc, char* argv[]) {
     pair<bool, int> quitcode = get_options(&myopts, argc, argv);

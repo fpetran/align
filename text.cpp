@@ -3,6 +3,7 @@
 #include<cctype>
 #include<string>
 #include<list>
+#include<vector>
 #include<fstream>
 #include<ostream>
 #include<stdexcept>
@@ -144,5 +145,5 @@ void Text::open(const string& fname) {
     file.clear();
     file.close();
 }
-}
+}  // namespace Align
 

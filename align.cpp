@@ -46,16 +46,16 @@ Candidates::~Candidates() {
         delete tr->second;
 }
 
-///////////////////////// SequenceContainer ///////////////////////////////////
+///////////////////////// AlignMake ///////////////////////////////////
 
-SequenceContainer::SequenceContainer(Candidates* c) {
+AlignMake::AlignMake(Candidates* c) {
     this->_candidates = c;
     this->_dict = c->_dict;
     this->hypothesis = new Hypothesis(*_dict);
     this->params = Params::get();
 }
 
-SequenceContainer& SequenceContainer::initial_sequences() {
+AlignMake& AlignMake::initial_sequences() {
     for (auto cand1 = _candidates->begin();
          cand1 != _candidates->end(); ++cand1) {
         if (cand1->second->empty())
@@ -105,7 +105,7 @@ SequenceContainer& SequenceContainer::initial_sequences() {
     return *this;
 }
 
-SequenceContainer& SequenceContainer::expand_sequences() {
+AlignMake& AlignMake::expand_sequences() {
     int pairs_added;
     // XXX the checks for closeness
     // should use abs and check if
@@ -139,7 +139,7 @@ SequenceContainer& SequenceContainer::expand_sequences() {
     return *this;
 }
 
-SequenceContainer& SequenceContainer::merge_sequences() {
+AlignMake& AlignMake::merge_sequences() {
     int combined = 0;
 
     do {
@@ -168,7 +168,7 @@ SequenceContainer& SequenceContainer::merge_sequences() {
     return *this;
 }
 
-SequenceContainer& SequenceContainer::collect_scores() {
+AlignMake& AlignMake::collect_scores() {
     // it's time to settle the score
     list<vector<float>> scores_all = list<vector<float>>();
 
@@ -201,7 +201,7 @@ SequenceContainer& SequenceContainer::collect_scores() {
     return *this;
 }
 
-SequenceContainer& SequenceContainer::get_topranking() {
+AlignMake& AlignMake::get_topranking() {
     // the lambda removes other seqs with lower or equal
     // scores for a token, and returns true if the score
     // was equal.
@@ -250,5 +250,5 @@ SequenceContainer& SequenceContainer::get_topranking() {
 
     return *this;
 }
-}
+}  // namespace Align
 

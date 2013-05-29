@@ -95,6 +95,6 @@ class Dictionary : private std::map<WordType, std::list<WordType> > {
         /// an empty dictionary entry
         const std::list<WordType> empty_entry;
 };
-}
+}  // namespace Align
 #endif  // DICTIONARY_H_
 

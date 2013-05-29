@@ -234,5 +234,5 @@ void result_outputter(ResultSet* resultset) {
     index_file.close();
     std::cout << "...done writing!\n";
 }
-}
+}  // namespace DictionaryInducer
 

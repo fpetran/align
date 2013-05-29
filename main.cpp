@@ -25,23 +25,23 @@ int main(int argc, char* argv[]) {
         Align::Candidates c(*dict);
         c.collect();
 
-        Align::SequenceContainer sc(&c);
-        sc.initial_sequences()
-          .expand_sequences();
+        Align::AlignMake align_make(&c);
+        align_make.initial_sequences()
+                  .expand_sequences();
 
         const Align::Dictionary* rdict = df->get_dictionary(f_name, e_name);
         Align::Candidates rc(*rdict);
-        Align::SequenceContainer rsc(&rc);
-        rsc.initial_sequences()
-           .expand_sequences();
-        Align::Hypothesis *result  = sc.get_result(),
-                   *rresult = rsc.get_result();
+        Align::AlignMake reverse_make(&rc);
+        reverse_make.initial_sequences()
+                    .expand_sequences();
+        Align::Hypothesis *result  = align_make.get_result(),
+                          *rresult = reverse_make.get_result();
         rresult->reverse();
         result->munch(rresult);
 
-        sc.merge_sequences()
-          .collect_scores()
-          .get_topranking();
+        align_make.merge_sequences()
+                  .collect_scores()
+                  .get_topranking();
 
         for (Align::Sequence* seq : *result)
             std::cout << *seq << std::endl;
