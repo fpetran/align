@@ -50,6 +50,7 @@ class Candidates {
 class AlignMake {
     public:
         explicit AlignMake(Candidates* cand);
+        ~AlignMake();
 
         AlignMake() = delete;
         AlignMake(const AlignMake&) = delete;
@@ -70,6 +71,8 @@ class AlignMake {
         inline Hypothesis* get_result() {
             return hypothesis;
         }
+        /// return the address of Scorer container, so that users
+        /// can push_back() custom Scorer methods.
         inline ScoringMethods* scorers() {
             return &scoring_methods;
         }
@@ -77,7 +80,6 @@ class AlignMake {
     private:
         Hypothesis* hypothesis;
 
-        Params* params;
         Candidates* _candidates;
         const Dictionary* _dict;
         /// contains all scoring methods as functors

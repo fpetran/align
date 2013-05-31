@@ -36,7 +36,8 @@ WordToken::WordToken(const Text* text,
                      list<Sequence*> * seqs,
                      const string_impl* s,
                      const int pos, const WordType* type)
-    : Word(text), _position(pos)  {
+    : Word(text)  {
+    _position = pos;
     _string_realization = s;
     _type = type;
     _sequences = seqs;
@@ -60,8 +61,8 @@ void WordToken::remove_from(const Sequence* seq) const {
 bool WordToken::close_to(const WordToken& other) const {
     bool result =  this->_position != other._position
                 && abs(this->_position - other._position)
-                   <= Params::get()->closeness();
-    if (Params::get()->monotony())
+                   <= Params::get().closeness();
+    if (Params::get().monotony())
         return result && this->_position < other._position;
     return result;
 }
@@ -103,8 +104,11 @@ Text::~Text() {
     for (pair<const string_impl, string_impl*>& sp : string_ptrs)
         delete sp.second;
 
-    for (pair<const string_impl, WordType*>& wt : _types)
+    for (pair<const string_impl, WordType*>& wt : _types) {
+        for (const WordToken& tok : wt.second->get_tokens())
+            delete tok.get_sequences();
         delete wt.second;
+    }
 }
 
 void Text::open(const string& fname) {

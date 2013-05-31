@@ -7,10 +7,9 @@
 #include"align.h"
 
 int main(int argc, char* argv[]) {
-    Align::Params* par = Align::Params::get();
     std::pair<std::string, std::string> files;
     try {
-        files = par->parse(argc, argv);
+        files = Align::Params::get().parse(argc, argv);
     } catch(std::runtime_error e) {
         std::cerr << e.what() << std::endl;
         return 1;
@@ -20,7 +19,8 @@ int main(int argc, char* argv[]) {
         const std::string &e_name = files.first,
                           &f_name = files.second;
 
-        Align::DictionaryFactory* df = Align::DictionaryFactory::get_instance();
+        Align::DictionaryFactory* df =
+            &Align::DictionaryFactory::get_instance();
         const Align::Dictionary* dict = df->get_dictionary(e_name, f_name);
         Align::Candidates c(*dict);
         c.collect();

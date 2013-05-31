@@ -164,7 +164,7 @@ void Sequence::merge(Sequence* that) {
 
 const Sequence& Sequence::reverse() {
     _dict = DictionaryFactory::get_instance()
-            ->get_dictionary(_dict->get_f()->filename(),
+             .get_dictionary(_dict->get_f()->filename(),
                              _dict->get_e()->filename());
     for (Pair& pair : *this)
         pair.reverse();
@@ -251,7 +251,7 @@ Hypothesis::iterator Hypothesis::remove_sequence(Sequence* seq) {
 
 const Hypothesis& Hypothesis::reverse() {
     _dict = DictionaryFactory::get_instance()
-            ->get_dictionary(_dict->get_f()->filename(),
+             .get_dictionary(_dict->get_f()->filename(),
                              _dict->get_e()->filename());
     for (Sequence* seq : *this)
         seq->reverse();

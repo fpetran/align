@@ -52,7 +52,10 @@ AlignMake::AlignMake(Candidates* c) {
     this->_candidates = c;
     this->_dict = c->_dict;
     this->hypothesis = new Hypothesis(*_dict);
-    this->params = Params::get();
+}
+
+AlignMake::~AlignMake() {
+    delete hypothesis;
 }
 
 AlignMake& AlignMake::initial_sequences() {
@@ -64,14 +67,14 @@ AlignMake& AlignMake::initial_sequences() {
         auto cand2 = cand1;
         ++cand2;
         int skipped = 0;
-        while (skipped <= params->max_skip()
+        while (skipped <= Params::get().max_skip()
             && cand2 != _candidates->end()
             && cand2->second->empty()) {
             ++skipped;
             ++cand2;
         }
 
-        if (skipped > params->max_skip()
+        if (skipped > Params::get().max_skip()
          || cand2 == _candidates->end())
             continue;
 
@@ -144,7 +147,6 @@ AlignMake& AlignMake::merge_sequences() {
 
     do {
         combined = 0;
-        // can't use our typedef here, because these aren't const
         for (auto seq = hypothesis->begin();
              seq != hypothesis->end();
              ++seq) {

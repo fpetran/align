@@ -11,11 +11,8 @@ using std::pair;
 
 namespace Align {
 
-Params* Params::_instance = new Params;
-
-Params::Params() {}
-
-Params* Params::get() {
+Params& Params::get() {
+    static Params _instance;
     return _instance;
 }
 
@@ -53,7 +50,7 @@ pair<string, string> Params::parse(int argc, char* argv[]) {
         (static_cast<std::string>("pAlign v")
          + ALIGN_VERSION
          + "\nAllowed Options");
-    bool disable_monotony;
+    bool disable_monotony = ALIGN_DEFAULT_MONOTONY;
     desc.add_options()
         ("help,h", "display this helpful message")
         ("source,e", cfg::value<std::string>(), "source text to align")

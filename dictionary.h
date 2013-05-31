@@ -7,6 +7,7 @@
 #include<list>
 #include<algorithm>
 #include"text.h"
+#include"params.h"
 
 namespace Align {
 
@@ -21,7 +22,7 @@ class Dictionary;
  **/
 class DictionaryFactory {
     public:
-        static DictionaryFactory* get_instance();
+        static DictionaryFactory& get_instance();
         /// read a dictionary from the file if its first requested,
         /// otherwise just return the pointer to the dictionary entry
         const Dictionary* get_dictionary(const std::string&,
@@ -39,7 +40,6 @@ class DictionaryFactory {
         std::map<textpair, Dictionary*> dictionaries;
         /// an index mapping the filenames to the Text objects
         std::map<std::string, Text*> texts;
-        static DictionaryFactory* _instance;
         DictionaryFactory();
 };
 
@@ -90,7 +90,6 @@ class Dictionary : private std::map<WordType, std::list<WordType> > {
         void read(std::ifstream*);
 
     private:
-        DictionaryFactory* factory;
         Text *_e, *_f;
         /// an empty dictionary entry
         const std::list<WordType> empty_entry;

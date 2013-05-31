@@ -21,9 +21,8 @@ namespace Align {
 
 ////////////////////////// DictionaryFactory //////////////////////////////////
 
-DictionaryFactory* DictionaryFactory::_instance = new DictionaryFactory();
-
-DictionaryFactory* DictionaryFactory::get_instance() {
+DictionaryFactory& DictionaryFactory::get_instance() {
+    static DictionaryFactory _instance;
     return _instance;
 }
 
@@ -54,7 +53,7 @@ const Dictionary* DictionaryFactory::get_dictionary(const string& e,
 
     if (dict_entry == dictionaries.end()) {
         if (index_filename == "")
-            index_filename  = Params::get()->dict_base() + "/INDEX";
+            index_filename  = Params::get().dict_base() + "/INDEX";
         dictionaries[transl_pair] = new Dictionary();
         dictionaries[transl_pair]->set_texts(get_text(e), get_text(f));
         dictionaries[transl_pair]->open(locate_dictionary_file(basename(e),
@@ -108,19 +107,16 @@ string DictionaryFactory::locate_dictionary_file(const string& e_name,
                           + f_name
                           + " not found in index file!");
 
-    string filename = Params::get()->dict_base()
+    string filename = Params::get().dict_base()
                     + line.substr(0, line.find(":"));
     return filename;
 }
 
 /////////////////////////// Dictionary ////////////////////////////////////////
 
-Dictionary::Dictionary() {
-    factory = DictionaryFactory::get_instance();
-}
+Dictionary::Dictionary() {}
 
 Dictionary::Dictionary(const string& fname) {
-    factory = DictionaryFactory::get_instance();
     open(fname);
 }
 
@@ -192,7 +188,7 @@ const list<WordType>& Dictionary::lookup(const WordToken& lemma) const {
     // this needs to be at(), because operator[] doesn't return
     // const. if the range checking proves to be too expensive,
     // change to operator[] and const_cast
-    return (*this).at(lemma.get_type());
+    return this->at(lemma.get_type());
 }
 
 
@@ -200,7 +196,7 @@ bool Dictionary::has(const WordToken& lemma) const {
     if (&lemma.get_text() != _e)
         throw runtime_error("Text of word to look up doesn't match e");
 
-    return (*this).count(lemma.get_type()) >= 1;
+    return this->count(lemma.get_type()) >= 1;
 }
 }  // namespace Align
 

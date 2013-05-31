@@ -22,13 +22,12 @@ class Text;
 class Word {
     public:
         const Text& get_text() const;
+        virtual ~Word() = default;
+        Word() = delete;
 
     protected:
         explicit Word(const Text*);
         const Text* _text;
-
-    private:
-        Word() {}
 };
 
 class WordType;
@@ -91,7 +90,7 @@ class WordToken : public Word {
         WordToken();
 
     private:
-        int _position;
+        int _position = 0;
         const WordType* _type;
         const string_impl* _string_realization;
         mutable std::list<Sequence*> *_sequences;

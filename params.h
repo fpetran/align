@@ -3,20 +3,27 @@
 #define PARAMS_H_
 #include<string>
 #include<utility>
+#include<iostream>
 #include<boost/program_options.hpp> // NOLINT[build/include_order]
 #include"align_config.h"
 
 namespace Align {
 
 /// Hold parameters for alignment.
-/*! An eager singleton that encapsulates all parameters.
+/*! A singleton that encapsulates all parameters.
+ *
+ *  We're using a lazy Meyers singleton, since apparently
+ *  those are threadsafe in C++11.
  *
  *  It also takes care of the parsing of options from the
  *  command line, and maybe eventually from a config file.
  **/
 class Params {
     public:
-        static Params* get();
+        Params(const Params& p) = delete;
+        const Params& operator=(const Params& p) = delete;
+
+        static Params& get();
 
         int max_skip();
         int closeness();
@@ -37,8 +44,7 @@ class Params {
         std::pair<std::string, std::string> parse(int argc, char* argv[]);
 
     private:
-        static Params* _instance;
-        Params();
+        Params() = default;
 
         int  _closeness         = ALIGN_DEFAULT_CLOSENESS;
         bool _monotony          = ALIGN_DEFAULT_MONOTONY;
